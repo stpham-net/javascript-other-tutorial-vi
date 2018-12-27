@@ -1,5 +1,4 @@
-Understanding Node.js Event-Driven Architecture
-===============================================
+# Understanding Node.js Event-Driven Architecture
 
 Most of Node's objects --- like HTTP requests, responses, and streams --- implement the `EventEmitter` module so they can provide a way to emit and listen to events.
 
