@@ -20,17 +20,17 @@ It's important to understand that callbacks do not indicate an asynchronous call
 For example, here's a host function `fileSize` that accepts a callback function `cb` and can invoke that callback function both synchronously and asynchronously based on a condition:
 
 ```js
-      function fileSize (fileName, cb) {
-        if (typeof fileName !== 'string') {
-          return cb(new TypeError('argument should be string')); // Sync
-        }
-      
-        fs.stat(fileName, (err, stats) => {
-          if (err) { return cb(err); } // Async
-      
-          cb(null, stats.size); // Async
-        });
-      }
+function fileSize (fileName, cb) {
+  if (typeof fileName !== 'string') {
+    return cb(new TypeError('argument should be string')); // Sync
+  }
+
+  fs.stat(fileName, (err, stats) => {
+    if (err) { return cb(err); } // Async
+
+    cb(null, stats.size); // Async
+  });
+}
 ```
 
 Note that this is a bad practice that leads to unexpected errors. Design host functions to consume callback either always synchronously or always asynchronously.
@@ -38,16 +38,16 @@ Note that this is a bad practice that leads to unexpected errors. Design host fu
 Let's explore a simple example of a typical asynchronous Node function that's written with a callback style:
 
 ```js
-      const readFileAsArray = function(file, cb) {
-        fs.readFile(file, function(err, data) {
-          if (err) {
-            return cb(err);
-          }
-      
-          const lines = data.toString().trim().split('\n');
-          cb(null, lines);
-        });
-      };
+const readFileAsArray = function(file, cb) {
+  fs.readFile(file, function(err, data) {
+    if (err) {
+      return cb(err);
+    }
+
+    const lines = data.toString().trim().split('\n');
+    cb(null, lines);
+  });
+};
 ```
 
 `readFileAsArray` takes a file path and a callback function. It reads the file content, splits it into an array of lines, and calls the callback function with that array.
@@ -55,24 +55,24 @@ Let's explore a simple example of a typical asynchronous Node function that's wr
 Here's an example use for it. Assuming that we have the file `numbers.txt` in the same directory with content like this:
 
 ```
-      10
-      11
-      12
-      13
-      14
-      15
+10
+11
+12
+13
+14
+15
 ```
 
 If we have a task to count the odd numbers in that file, we can use `readFileAsArray` to simplify the code:
 
 ```js
-      readFileAsArray('./numbers.txt', (err, lines) => {
-        if (err) throw err;
-      
-        const numbers = lines.map(Number);
-        const oddNumbers = numbers.filter(n => n%2 === 1);
-        console.log('Odd numbers count:', oddNumbers.length);
-      });
+readFileAsArray('./numbers.txt', (err, lines) => {
+  if (err) throw err;
+
+  const numbers = lines.map(Number);
+  const oddNumbers = numbers.filter(n => n%2 === 1);
+  console.log('Odd numbers count:', oddNumbers.length);
+});
 ```
 
 The code reads the numbers content into an array of strings, parses them as numbers, and counts the odd ones.
@@ -86,13 +86,13 @@ In modern JavaScript, we have promise objects. Promises can be an alternative to
 If the `readFileAsArray` function supports promises, we can use it as follows:
 
 ```js
-      readFileAsArray('./numbers.txt')
-        .then(lines => {
-          const numbers = lines.map(Number);
-          const oddNumbers = numbers.filter(n => n%2 === 1);
-          console.log('Odd numbers count:', oddNumbers.length);
-        })
-        .catch(console.error);
+readFileAsArray('./numbers.txt')
+  .then(lines => {
+    const numbers = lines.map(Number);
+    const oddNumbers = numbers.filter(n => n%2 === 1);
+    console.log('Odd numbers count:', oddNumbers.length);
+  })
+  .catch(console.error);
 ```
 
 Instead of passing in a callback function, we called a `.then` function on the return value of the host function. This `.then` function usually gives us access to the same lines array that we get in the callback version, and we can do our processing on it as before. To handle errors, we add a `.catch` call on the result and that gives us access to an error when it happens.
@@ -100,20 +100,20 @@ Instead of passing in a callback function, we called a `.then` function on the
 Making the host function support a promise interface is easier in modern JavaScript thanks to the new Promise object. Here's the `readFileAsArray` function modified to support a promise interface in addition to the callback interface it already supports:
 
 ```js
-      const readFileAsArray = function(file, cb = () => {}) {
-        return new Promise((resolve, reject) => {
-          fs.readFile(file, function(err, data) {
-            if (err) {
-              reject(err);
-              return cb(err);
-            }
+const readFileAsArray = function(file, cb = () => {}) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, function(err, data) {
+      if (err) {
+        reject(err);
+        return cb(err);
+      }
 
-            const lines = data.toString().trim().split('\n');
-            resolve(lines);
-            cb(null, lines);
-          });
-       });
-      };
+      const lines = data.toString().trim().split('\n');
+      resolve(lines);
+      cb(null, lines);
+    });
+ });
+};
 ```
 
 So we make the function return a Promise object, which wraps the `fs.readFile` async call. The promise object exposes two arguments, a `resolve` function and a `reject` function.
@@ -131,18 +131,18 @@ Promises improve that a little bit, and function generators improve on that a li
 Here's how we can consume the `readFileAsArray` function with async/await:
 
 ```js
-      async function countOdd () {
-        try {
-          const lines = await readFileAsArray('./numbers');
-          const numbers = lines.map(Number);
-          const oddCount = numbers.filter(n => n%2 === 1).length;
-          console.log('Odd numbers count:', oddCount);
-        } catch(err) {
-          console.error(err);
-        }
-      }
-      
-      countOdd();
+async function countOdd () {
+  try {
+    const lines = await readFileAsArray('./numbers');
+    const numbers = lines.map(Number);
+    const oddCount = numbers.filter(n => n%2 === 1).length;
+    console.log('Odd numbers count:', oddCount);
+  } catch(err) {
+    console.error(err);
+  }
+}
+
+countOdd();
 ```
 
 We first create an async function, which is just a normal function with the word `async` before it. Inside the async function, we call the `readFileAsArray` function as if it returns the lines variable, and to make that work, we use the keyword `await`. After that, we continue the code as if the `readFileAsArray` call was synchronous.
@@ -165,21 +165,21 @@ The concept is simple: emitter objects emit named events that cause previously r
 To work with the EventEmitter, we just create a class that extends EventEmitter.
 
 ```js
-      class MyEmitter extends EventEmitter {
-      
-      }
+class MyEmitter extends EventEmitter {
+
+}
 ```
 
 Emitter objects are what we instantiate from the EventEmitter-based classes:
 
 ```js
-      const myEmitter = new MyEmitter();
+const myEmitter = new MyEmitter();
 ```
 
 At any point in the lifecycle of those emitter objects, we can use the emit function to emit any named event we want.
 
 ```js
-      myEmitter.emit('something-happened');
+myEmitter.emit('something-happened');
 ```
 
 Emitting an event is the signal that some condition has occurred. This condition is usually about a state change in the emitting object.
@@ -191,24 +191,24 @@ We can add listener functions using the `on` method, and those listener functi
 Let's take a look at an example:
 
 ```js
-      const EventEmitter = require('events');
-      
-      class WithLog extends EventEmitter {
-        execute(taskFunc) {
-          console.log('Before executing');
-          this.emit('begin');
-          taskFunc();
-          this.emit('end');
-          console.log('After executing');
-        }
-      }
-      
-      const withLog = new WithLog();
-      
-      withLog.on('begin', () => console.log('About to execute'));
-      withLog.on('end', () => console.log('Done with execute'));
-      
-      withLog.execute(() => console.log('*** Executing task ***'));
+const EventEmitter = require('events');
+
+class WithLog extends EventEmitter {
+  execute(taskFunc) {
+    console.log('Before executing');
+    this.emit('begin');
+    taskFunc();
+    this.emit('end');
+    console.log('After executing');
+  }
+}
+
+const withLog = new WithLog();
+
+withLog.on('begin', () => console.log('About to execute'));
+withLog.on('end', () => console.log('Done with execute'));
+
+withLog.execute(() => console.log('*** Executing task ***'));
 ```
 
 Class `WithLog` is an event emitter. It defines one instance function `execute`. This `execute` function receives one argument, a task function, and wraps its execution with log statements. It fires events before and after the execution.
@@ -218,11 +218,11 @@ To see the sequence of what will happen here, we register listeners on both name
 Here's the output of that:
 
 ```
-      Before executing
-      About to execute
-      *** Executing task ***
-      Done with execute
-      After executing
+Before executing
+About to execute
+*** Executing task ***
+Done with execute
+After executing
 ```
 
 What I want you to notice about the output above is that it all happens synchronously. There is nothing asynchronous about this code.
@@ -240,23 +240,23 @@ This is important, because if we pass an asynchronous `taskFunc` to `execute`
 We can simulate the case with a `setImmediate` call:
 
 ```js
-      // ...
+// ...
 
-      withLog.execute(() => {
-        setImmediate(() => {
-          console.log('*** Executing task ***')
-        });
-      });
+withLog.execute(() => {
+  setImmediate(() => {
+    console.log('*** Executing task ***')
+  });
+});
 ```
 
 Now the output would be:
 
 ```
-      Before executing
-      About to execute
-      Done with execute
-      After executing
-      *** Executing task ***
+Before executing
+About to execute
+Done with execute
+After executing
+*** Executing task ***
 ```
 
 This is wrong. The lines after the async call, which were caused the "Done with execute" and "After executing" calls, are not accurate any more.
@@ -270,31 +270,31 @@ One benefit of using events instead of regular callbacks is that we can react to
 Let's convert the synchronous sample example into something asynchronous and a little bit more useful.
 
 ```js
-      const fs = require('fs');
-      const EventEmitter = require('events');
-      
-      class WithTime extends EventEmitter {
-        execute(asyncFunc, ...args) {
-          this.emit('begin');
-          console.time('execute');
-          asyncFunc(...args, (err, data) => {
-            if (err) {
-              return this.emit('error', err);
-            }
-      
-            this.emit('data', data);
-            console.timeEnd('execute');
-            this.emit('end');
-          });
-        }
+const fs = require('fs');
+const EventEmitter = require('events');
+
+class WithTime extends EventEmitter {
+  execute(asyncFunc, ...args) {
+    this.emit('begin');
+    console.time('execute');
+    asyncFunc(...args, (err, data) => {
+      if (err) {
+        return this.emit('error', err);
       }
-      
-      const withTime = new WithTime();
-      
-      withTime.on('begin', () => console.log('About to execute'));
-      withTime.on('end', () => console.log('Done with execute'));
-      
-      withTime.execute(fs.readFile, __filename);
+
+      this.emit('data', data);
+      console.timeEnd('execute');
+      this.emit('end');
+    });
+  }
+}
+
+const withTime = new WithTime();
+
+withTime.on('begin', () => console.log('About to execute'));
+withTime.on('end', () => console.log('Done with execute'));
+
+withTime.execute(fs.readFile, __filename);
 ```
 
 The `WithTime` class executes an `asyncFunc` and reports the time that's taken by that `asyncFunc` using `console.time` and `console.timeEnd` calls. It emits the right sequence of events before and after the execution. And also emits error/data events to work with the usual signals of asynchronous calls.
@@ -304,28 +304,28 @@ We test a `withTime` emitter by passing it an `fs.readFile` call, which is an
 When we execute this code , we get the right sequence of events, as expected, and we get a reported time for the execution, which is helpful:
 
 ```
-      About to execute
-      execute: 4.507ms
-      Done with execute
+About to execute
+execute: 4.507ms
+Done with execute
 ```
 
 Note how we needed to combine a callback with an event emitter to accomplish that. If the `asynFunc` supported promises as well, we could use the async/await feature to do the same:
 
 ```js
-      class WithTime extends EventEmitter {
-        async execute(asyncFunc, ...args) {
-          this.emit('begin');
-          try {
-            console.time('execute');
-            const data = await asyncFunc(...args);
-            this.emit('data', data);
-            console.timeEnd('execute');
-            this.emit('end');
-          } catch(err) {
-            this.emit('error', err);
-          }
-        }
-      }
+class WithTime extends EventEmitter {
+  async execute(asyncFunc, ...args) {
+    this.emit('begin');
+    try {
+      console.time('execute');
+      const data = await asyncFunc(...args);
+      this.emit('data', data);
+      console.timeEnd('execute');
+      this.emit('end');
+    } catch(err) {
+      this.emit('error', err);
+    }
+  }
+}
 ```
 
 I don't know about you, but this is much more readable to me than the callback-based code or any .then/.catch lines. The async/await feature brings us as close as possible to the JavaScript language itself, which I think is a big win.
@@ -337,13 +337,13 @@ In the previous example, there were two events that were emitted with extra argu
 The error event is emitted with an error object.
 
 ```js
-      this.emit('error', err);
+this.emit('error', err);
 ```
 
 The data event is emitted with a data object.
 
 ```js
-      this.emit('data', data);
+this.emit('data', data);
 ```
 
 We can use as many arguments as we need after the named event, and all these arguments will be available inside the listener functions we register for these named events.
@@ -351,9 +351,9 @@ We can use as many arguments as we need after the named event, and all these arg
 For example, to work with the data event, the listener function that we register will get access to the data argument that was passed to the emitted event and that data object is exactly what the `asyncFunc` exposes.
 
 ```js
-      withTime.on('data', (data) => {
-        // do something with data
-      });
+withTime.on('data', (data) => {
+  // do something with data
+});
 ```
 
 The `error` event is usually a special one. In our callback-based example, if we don't handle the error event with a listener, the node process will actually exit.
@@ -361,33 +361,33 @@ The `error` event is usually a special one. In our callback-based example, if 
 To demonstrate that, make another call to the execute method with a bad argument:
 
 ```js
-      class WithTime extends EventEmitter {
-        execute(asyncFunc, ...args) {
-          console.time('execute');
-          asyncFunc(...args, (err, data) => {
-            if (err) {
-              return this.emit('error', err); // Not Handled
-            }
-      
-            console.timeEnd('execute');
-          });
-        }
+class WithTime extends EventEmitter {
+  execute(asyncFunc, ...args) {
+    console.time('execute');
+    asyncFunc(...args, (err, data) => {
+      if (err) {
+        return this.emit('error', err); // Not Handled
       }
-      
-      const withTime = new WithTime();
-      
-      withTime.execute(fs.readFile, ''); // BAD CALL
-      withTime.execute(fs.readFile, __filename);
+
+      console.timeEnd('execute');
+    });
+  }
+}
+
+const withTime = new WithTime();
+
+withTime.execute(fs.readFile, ''); // BAD CALL
+withTime.execute(fs.readFile, __filename);
 ```
 
 The first execute call above will trigger an error. The node process is going to crash and exit:
 
 ```
-      events.js:163
-            throw er; // Unhandled 'error' event
-            ^
-      
-      Error: ENOENT: no such file or directory, open ''
+events.js:163
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: ENOENT: no such file or directory, open ''
 ```
 
 The second execute call will be affected by this crash and will potentially not get executed at all.
@@ -395,10 +395,10 @@ The second execute call will be affected by this crash and will potentially not 
 If we register a listener for the special `error` event, the behavior of the node process will change. For example:
 
 ```js
-      withTime.on('error', (err) => {
-        // do something with err, for example log it somewhere
-        console.log(err)
-      });
+withTime.on('error', (err) => {
+  // do something with err, for example log it somewhere
+  console.log(err)
+});
 ```
 
 If we do the above, the error from the first execute call will be reported but the node process will not crash and exit. The other execute call will finish normally:
@@ -421,15 +421,15 @@ The other way to handle exceptions from emitted errors is to register a listener
 The standard advice about `uncaughtException` is to avoid using it, but if you must do (say to report what happened or do cleanups), you should just let the process exit anyway:
 
 ```js
-      process.on('uncaughtException', (err) => {
-        // something went unhandled.
-        // Do any cleanup and exit anyway!
-      
-        console.error(err); // don't do just that.
-      
-        // FORCE exit the process too.
-        process.exit(1);
-      });
+process.on('uncaughtException', (err) => {
+  // something went unhandled.
+  // Do any cleanup and exit anyway!
+
+  console.error(err); // don't do just that.
+
+  // FORCE exit the process too.
+  process.exit(1);
+});
 ```
 
 However, imagine that multiple error events happen at the exact same time. This means the `uncaughtException`listener above will be triggered multiple times, which might be a problem for some cleanup code. An example of this is when multiple calls are made to a database shutdown action.
@@ -441,17 +441,17 @@ The `EventEmitter` module exposes a `once` method. This method signals to in
 If we register multiple listeners for the same event, the invocation of those listeners will be in order. The first listener that we register is the first listener that gets invoked.
 
 ```js
-      // प्रथम
-      withTime.on('data', (data) => {
-        console.log(`Length: ${data.length}`);
-      });
-      
-      // दूसरा
-      withTime.on('data', (data) => {
-        console.log(`Characters: ${data.toString().length}`);
-      });
-      
-      withTime.execute(fs.readFile, __filename);
+// प्रथम
+withTime.on('data', (data) => {
+  console.log(`Length: ${data.length}`);
+});
+
+// दूसरा
+withTime.on('data', (data) => {
+  console.log(`Characters: ${data.toString().length}`);
+});
+
+withTime.execute(fs.readFile, __filename);
 ```
 
 The above code will cause the "Length" line to be logged before the "Characters" line, because that's the order in which we defined those listeners.
@@ -459,17 +459,17 @@ The above code will cause the "Length" line to be logged before the "Characters"
 If you need to define a new listener, but have that listener invoked first, you can use the `prependListener` method:
 
 ```js
-      // प्रथम
-      withTime.on('data', (data) => {
-        console.log(`Length: ${data.length}`);
-      });
-      
-      // दूसरा
-      withTime.prependListener('data', (data) => {
-        console.log(`Characters: ${data.toString().length}`);
-      });
-      
-      withTime.execute(fs.readFile, __filename);
+// प्रथम
+withTime.on('data', (data) => {
+  console.log(`Length: ${data.length}`);
+});
+
+// दूसरा
+withTime.prependListener('data', (data) => {
+  console.log(`Characters: ${data.toString().length}`);
+});
+
+withTime.execute(fs.readFile, __filename);
 ```
 
 The above will cause the "Characters" line to be logged first.
