@@ -1,25 +1,25 @@
-# Understanding Node.js Event-Driven Architecture
+# Hiểu kiến trúc hướng sự kiện của Node.js (Understanding Node.js Event-Driven Architecture)
 
-Most of Node's objects --- like HTTP requests, responses, and streams --- implement the `EventEmitter` module so they can provide a way to emit and listen to events.
+Hầu hết các đối tượng của Node (Node's objects) -- như các HTTP requests, responses, and streams -- thực hiện mô đun `EventEmitter` để chúng có thể cung cấp cách phát (emit) và nghe (listen) các sự kiện (events).
 
 ![](https://cdn-images-1.medium.com/max/1000/1*74K5OhiYt7WTR0WuVGeNLQ.png)
 
-The simplest form of the event-driven nature is the callback style of some of the popular Node.js functions --- for example, `fs.readFile`. In this analogy, the event will be fired once (when Node is ready to call the callback) and the callback acts as the event handler.
+Dạng đơn giản nhất của bản chất hướng sự kiện (event-driven nature) là callback style của một số Node.js functions phổ biến -- ví dụ: `fs.readFile`. Trong sự tương tự này, sự kiện sẽ được kích hoạt một lần (khi Node sẵn sàng gọi callback) và callback đóng vai trò xử lý sự kiện (event handler).
 
-Let's explore this basic form first.
+Trước tiên hãy khám phá hình thức cơ bản này.
 
-#### Call me when you're ready, Node!
+#### Gọi cho tôi khi bạn đã sẵn sàng, Node! (Call me when you're ready, Node!)
 
-The original way Node handled asynchronous events was with callback. This was a long time ago, before JavaScript had native promises support and the async/await feature.
+Cách original (The original way) Node xử lý các sự kiện không đồng bộ là với callback. Điều này đã có từ lâu, trước khi JavaScript có hỗ trợ promises riêng và tính năng async/await.
 
-Callbacks are basically just functions that you pass to other functions. This is possible in JavaScript because functions are first class objects.
+Callbacks về cơ bản chỉ là các functions mà bạn chuyển đến các functions khác. Điều này có thể có trong JavaScript vì các functions là các first class objects.
 
-It's important to understand that callbacks do not indicate an asynchronous call in the code. A function can call the callback both synchronously and asynchronously.
+Điều quan trọng là phải hiểu rằng các callbacks không đòi hỏi phải một cuộc gọi không đồng bộ trong mã. Một hàm có thể gọi callback cả đồng bộ và không đồng bộ.
 
-For example, here's a host function `fileSize` that accepts a callback function `cb` and can invoke that callback function both synchronously and asynchronously based on a condition:
+Ví dụ: đây là hàm lưu trữ `fileSize` chấp nhận callback function `cb` và có thể gọi callback function đó một cách đồng bộ và không đồng bộ dựa trên một điều kiện:
 
 ```js
-function fileSize (fileName, cb) {
+function fileSize(fileName, cb) {
   if (typeof fileName !== 'string') {
     return cb(new TypeError('argument should be string')); // Sync
   }
@@ -32,9 +32,9 @@ function fileSize (fileName, cb) {
 }
 ```
 
-Note that this is a bad practice that leads to unexpected errors. Design host functions to consume callback either always synchronously or always asynchronously.
+Lưu ý rằng đây là một thực tiễn xấu dẫn đến lỗi không mong muốn. Design host functions để sử dụng callback hoặc luôn đồng bộ hoặc luôn không đồng bộ.
 
-Let's explore a simple example of a typical asynchronous Node function that's written with a callback style:
+Chúng ta hãy khám phá một ví dụ đơn giản về asynchronous Node function điển hình được viết bằng một callback style:
 
 ```js
 const readFileAsArray = function(file, cb) {
@@ -49,9 +49,9 @@ const readFileAsArray = function(file, cb) {
 };
 ```
 
-`readFileAsArray` takes a file path and a callback function. It reads the file content, splits it into an array of lines, and calls the callback function with that array.
+`readFileAsArray` có file path và một callback function. Nó đọc nội dung tệp, chia nó thành một mảng các dòng và gọi callback function với mảng đó.
 
-Here's an example use for it. Assuming that we have the file `numbers.txt` in the same directory with content like this:
+Đây là một ví dụ sử dụng cho nó. Giả sử rằng chúng ta có tệp `numbers.txt` trong cùng thư mục có nội dung như thế này:
 
 ```
 10
@@ -62,7 +62,7 @@ Here's an example use for it. Assuming that we have the file `numbers.txt` in 
 15
 ```
 
-If we have a task to count the odd numbers in that file, we can use `readFileAsArray` to simplify the code:
+Nếu chúng ta có nhiệm vụ đếm các số lẻ trong tệp đó, chúng ta có thể sử dụng `readFileAsArray` để đơn giản hóa mã:
 
 ```js
 readFileAsArray('./numbers.txt', (err, lines) => {
@@ -74,15 +74,15 @@ readFileAsArray('./numbers.txt', (err, lines) => {
 });
 ```
 
-The code reads the numbers content into an array of strings, parses them as numbers, and counts the odd ones.
+Mã này đọc nội dung số thành một chuỗi các chuỗi, phân tích chúng dưới dạng số và đếm các số lẻ.
 
-Node's callback style is used purely here. The callback has an error-first argument `err` that's nullable and we pass the callback as the last argument for the host function. You should always do that in your functions because users will probably assume that. Make the host function receive the callback as its last argument and make the callback expect an error object as its first argument.
+Node's callback style được sử dụng hoàn toàn ở đây. The callback có một đối số đầu tiên là lỗi `err` vô giá trị (that's nullable) và chúng ta chuyển callback làm đối số cuối cùng cho host function. Bạn nên luôn luôn làm điều đó trong các functions của bạn bởi vì người dùng có thể sẽ cho rằng. Làm cho host function nhận được the callback làm đối số cuối cùng của nó và làm cho the callback mong đợi một error object là đối số đầu tiên của nó.
 
-#### The modern JavaScript alternative to Callbacks
+#### JavaScript hiện đại thay thế cho Callbacks (The modern JavaScript alternative to Callbacks)
 
-In modern JavaScript, we have promise objects. Promises can be an alternative to callbacks for asynchronous APIs. Instead of passing a callback as an argument and handling the error in the same place, a promise object allows us to handle success and error cases separately and it also allows us to chain multiple asynchronous calls instead of nesting them.
+Trong JavaScript hiện đại, chúng ta có các promise objects. Promises có thể là một giải pháp thay thế cho các callbacks cho các API không đồng bộ. Thay vì chuyển một callback như một đối số và xử lý lỗi ở cùng một vị trí, một promise object cho phép chúng ta xử lý các trường hợp thành công và lỗi riêng biệt và nó cũng cho phép chúng ta xâu chuỗi (chain) nhiều cuộc gọi không đồng bộ thay vì lồng chúng.
 
-If the `readFileAsArray` function supports promises, we can use it as follows:
+Nếu hàm `readFileAsArray` hỗ trợ các promises, chúng ta có thể sử dụng nó như sau:
 
 ```js
 readFileAsArray('./numbers.txt')
@@ -94,9 +94,9 @@ readFileAsArray('./numbers.txt')
   .catch(console.error);
 ```
 
-Instead of passing in a callback function, we called a `.then` function on the return value of the host function. This `.then` function usually gives us access to the same lines array that we get in the callback version, and we can do our processing on it as before. To handle errors, we add a `.catch` call on the result and that gives us access to an error when it happens.
+Thay vì truyền vào một callback function, chúng ta đã gọi một `.then` function trên giá trị trả về của host function. This `.then` function thường cung cấp cho chúng ta quyền truy cập vào cùng lines array mà chúng ta có trong phiên bản callback và chúng ta có thể xử lý nó như trước. Để xử lý lỗi, chúng tôi thêm một lệnh gọi `.catch` vào kết quả và điều đó cho phép chúng ta truy cập vào một lỗi khi nó xảy ra.
 
-Making the host function support a promise interface is easier in modern JavaScript thanks to the new Promise object. Here's the `readFileAsArray` function modified to support a promise interface in addition to the callback interface it already supports:
+Làm cho host function hỗ trợ một promise interface dễ dàng hơn trong JavaScript hiện đại nhờ vào đối tượng Promise mới. Đây là `readFileAsArray` function được sửa đổi để hỗ trợ một promise interface thêm vào callback interface mà nó đã hỗ trợ:
 
 ```js
 const readFileAsArray = function(file, cb = () => {}) {
@@ -111,23 +111,23 @@ const readFileAsArray = function(file, cb = () => {}) {
       resolve(lines);
       cb(null, lines);
     });
- });
+});
 };
 ```
 
-So we make the function return a Promise object, which wraps the `fs.readFile` async call. The promise object exposes two arguments, a `resolve` function and a `reject` function.
+Như vậy, chúng ta làm cho hàm trả về một Promise object, nó wraps lệnh gọi async `fs.readFile`. The promise object trưng ra hai đối số, một `resolve` function và một `reject` function.
 
-Whenever we want to invoke the callback with an error we use the promise `reject` function as well, and whenever we want to invoke the callback with data we use the promise `resolve` function as well.
+Bất cứ khi nào chúng ta muốn gọi ra (invoke) the callback với một lỗi chúng ta sử dụng promise `reject` function, và bất cứ khi nào chúng ta muốn gọi ra (invoke) the callback với dữ liệu chúng ta sử dụng promise `resolve` function.
 
-The only other thing we needed to do in this case is to have a default value for this callback argument in case the code is being used with the promise interface. We can use a simple, default empty function in the argument for that case: `() => {}`.
+Một điều khác duy nhất chúng ta cần làm trong trường hợp này là có một giá trị mặc định cho đối số của callback này trong trường hợp mã đang được sử dụng với promise interface. Chúng ta có thể sử dụng một hàm trống đơn giản, mặc định trong đối số cho trường hợp đó: `() => {}`.
 
 #### Consuming promises with async/await
 
-Adding a promise interface makes your code a lot easier to work with when there is a need to loop over an async function. With callbacks, things become messy.
+Thêm một promise interface giúp mã của bạn hoạt động dễ dàng hơn rất nhiều khi có nhu cầu lặp qua (loop over) một async function. Với callbacks, mọi thứ trở nên lộn xộn.
 
-Promises improve that a little bit, and function generators improve on that a little bit more. This said, a more recent alternative to working with async code is to use the `async` function, which allows us to treat async code as if it was synchronous, making it a lot more readable overall.
+Promises sẽ cải thiện điều đó một chút, và các function generators sẽ cải thiện điều đó thêm một chút nữa. Điều này nói rằng, một sự thay thế gần đây hơn để làm việc với mã async là sử dụng `async` function, cho phép chúng ta xử lý mã async như thể nó synchronous, làm cho nó dễ đọc hơn rất nhiều.
 
-Here's how we can consume the `readFileAsArray` function with async/await:
+Đây là cách chúng ta có thể sử dụng hàm `readFileAsArray` với async/await:
 
 ```js
 async function countOdd () {
@@ -144,24 +144,24 @@ async function countOdd () {
 countOdd();
 ```
 
-We first create an async function, which is just a normal function with the word `async` before it. Inside the async function, we call the `readFileAsArray` function as if it returns the lines variable, and to make that work, we use the keyword `await`. After that, we continue the code as if the `readFileAsArray` call was synchronous.
+Trước tiên chúng ta tạo một async function, đây chỉ là một normal function có từ `async` trước nó. Bên trong hàm async, chúng ta gọi hàm `readFileAsArray` như thể nó trả về lines variable và để làm cho nó hoạt động, chúng ta sử dụng từ khóa `await`. Sau đó, chúng ta tiếp tục mã như thể cuộc gọi `readFileAsArray` là đồng bộ.
 
-To get things to run, we execute the async function. This is very simple and more readable. To work with errors, we need to wrap the async call in a `try`/`catch` statement.
+Để có được những thứ đó chạy, chúng ta thực hiện async function. Điều này rất đơn giản và dễ đọc hơn. Để làm việc với các lỗi, chúng ta cần phải wrap the async call trong một `try`/`catch` statement.
 
-With this async/await feature, we did not have to use any special API (like .then and .catch). We just labeled functions differently and used pure JavaScript for the code.
+Với tính năng async/await này, chúng ta không phải sử dụng bất kỳ API đặc biệt nào (như .then và .catch). Chúng tôi chỉ dán nhãn các hàm khác nhau và sử dụng JavaScript thuần cho mã.
 
-We can use the async/await feature with any function that supports a promise interface. However, we can't use it with callback-style async functions (like setTimeout for example).
+Chúng tôi có thể sử dụng tính năng async/await với bất kỳ function nào hỗ trợ một promise interface. Tuy nhiên, chúng ta không thể sử dụng nó với các callback-style async functions (ví dụ như setTimeout).
 
 ### The EventEmitter Module
 
-The EventEmitter is a module that facilitates communication between objects in Node. EventEmitter is at the core of Node asynchronous event-driven architecture. Many of Node's built-in modules inherit from EventEmitter.
+The EventEmitter là một mô-đun hỗ trợ giao tiếp giữa các đối tượng trong Node. EventEmitter là cốt lõi của kiến trúc hướng sự kiện không đồng bộ Node. Nhiều Node's built-in modules kế thừa từ EventEmitter.
 
-The concept is simple: emitter objects emit named events that cause previously registered listeners to be called. So, an emitter object basically has two main features:
+Khái niệm này rất đơn giản: các emitter objects phát ra các sự kiện được đặt tên khiến các listeners đã đăng ký trước đó được gọi. Vì vậy, về cơ bản một emitter object có hai tính năng chính:
 
--   Emitting name events.
--   Registering and unregistering listener functions.
+- Phát ra tên các sự kiện (Emitting name events).
+- Đăng ký và hủy đăng ký các listener functions.
 
-To work with the EventEmitter, we just create a class that extends EventEmitter.
+Để làm việc với EventEmitter, chúng ta chỉ cần tạo một class extends EventEmitter.
 
 ```js
 class MyEmitter extends EventEmitter {
@@ -169,25 +169,25 @@ class MyEmitter extends EventEmitter {
 }
 ```
 
-Emitter objects are what we instantiate from the EventEmitter-based classes:
+Các emitter objects là những gì chúng ta khởi tạo từ các EventEmitter-based classes:
 
 ```js
 const myEmitter = new MyEmitter();
 ```
 
-At any point in the lifecycle of those emitter objects, we can use the emit function to emit any named event we want.
+Tại bất kỳ thời điểm nào trong vòng đời của các emitter objects đó, chúng ta có thể sử dụng emit function ra để phát ra (emit) bất kỳ sự kiện được đặt tên nào chúng ta muốn.
 
 ```js
 myEmitter.emit('something-happened');
 ```
 
-Emitting an event is the signal that some condition has occurred. This condition is usually about a state change in the emitting object.
+Phát ra (Emitting) một sự kiện là tín hiệu cho thấy một số điều kiện đã xảy ra. Điều kiện này thường là về một sự thay đổi trạng thái trong emitting object.
 
-We can add listener functions using the `on` method, and those listener functions will be executed every time the emitter object emits their associated name event.
+Chúng ta có thể thêm các listener functions bằng phương thức `on`, và các listener functions này sẽ được thực thi mỗi khi emitter object phát ra sự kiện tên liên quan của chúng (emits their associated name event).
 
-#### Events !== Asynchrony
+#### Events !== Asynchrony
 
-Let's take a look at an example:
+Hãy xem một ví dụ:
 
 ```js
 const EventEmitter = require('events');
@@ -210,11 +210,11 @@ withLog.on('end', () => console.log('Done with execute'));
 withLog.execute(() => console.log('*** Executing task ***'));
 ```
 
-Class `WithLog` is an event emitter. It defines one instance function `execute`. This `execute` function receives one argument, a task function, and wraps its execution with log statements. It fires events before and after the execution.
+Class `WithLog` là một event emitter. Nó định nghĩa instance function `execute`. `execute` function này nhận một đối số, một task function, và wraps việc thực thi của nó bằng các log statements. Nó bắn các sự kiện trước và sau khi thực hiện.
 
-To see the sequence of what will happen here, we register listeners on both named events and finally execute a sample task to trigger things.
+Để xem trình tự những gì sẽ xảy ra ở đây, chúng ta đăng ký listeners trên cả hai sự kiện được đặt tên và cuối cùng thực hiện một sample task để kích hoạt (trigger) mọi thứ.
 
-Here's the output of that:
+Đây là đầu ra của điều đó:
 
 ```
 Before executing
@@ -224,19 +224,19 @@ Done with execute
 After executing
 ```
 
-What I want you to notice about the output above is that it all happens synchronously. There is nothing asynchronous about this code.
+Điều tôi muốn bạn chú ý về đầu ra ở trên là tất cả đều diễn ra đồng bộ. Không có gì không đồng bộ trong mã này.
 
--   We get the "Before executing" line first.
--   The `begin` named event then causes the "About to execute" line.
--   The actual execution line then outputs the "*** Executing task ***" line.
--   The `end` named event then causes the "Done with execute" line
--   We get the "After executing" line last.
+- Chúng ta nhận được dòng "Before executing" đầu tiên.
+- The `begin` named event sau đó gây ra dòng "About to execute".
+- Dòng thực thi thực tế sau đó xuất ra dòng "*** Executing task ***".
+- The `end` named event sau đó gây ra dòng "Done with execute"
+- Chúng ta nhận được dòng "After executing" cuối cùng.
 
-Just like plain-old callbacks, do not assume that events mean synchronous or asynchronous code.
+Cũng giống như các plain-old callbacks, không cho rằng các sự kiện có nghĩa là mã đồng bộ hoặc không đồng bộ.
 
-This is important, because if we pass an asynchronous `taskFunc` to `execute`, the events emitted will no longer be accurate.
+Điều này rất quan trọng, bởi vì nếu chúng ta chuyển một `taskFunc` không đồng bộ tới `execute`, các sự kiện được phát ra sẽ không còn chính xác nữa.
 
-We can simulate the case with a `setImmediate` call:
+Chúng ta có thể mô phỏng trường hợp này bằng một cuộc gọi `setImmediate`:
 
 ```js
 // ...
@@ -248,7 +248,7 @@ withLog.execute(() => {
 });
 ```
 
-Now the output would be:
+Bây giờ đầu ra sẽ là:
 
 ```
 Before executing
@@ -258,15 +258,15 @@ After executing
 *** Executing task ***
 ```
 
-This is wrong. The lines after the async call, which were caused the "Done with execute" and "After executing" calls, are not accurate any more.
+Cái này sai. Các dòng sau cuộc gọi async, đã gây ra các cuộc gọi "Done with execute" và "After executing", không còn chính xác nữa.
 
-To emit an event after an asynchronous function is done, we'll need to combine callbacks (or promises) with this event-based communication. The example below demonstrates that.
+Để phát ra một sự kiện sau khi chức năng không đồng bộ được thực hiện, chúng ta sẽ cần kết hợp các callbacks (or promises) với giao tiếp dựa trên sự kiện này. Ví dụ dưới đây chứng minh điều đó.
 
-One benefit of using events instead of regular callbacks is that we can react to the same signal multiple times by defining multiple listeners. To accomplish the same with callbacks, we have to write more logic inside the single available callback. Events are a great way for applications to allow multiple external plugins to build functionality on top of the application's core. You can think of them as hook points to allow for customizing the story around a state change.
+Một lợi ích của việc sử dụng các sự kiện thay vì các regular callbacks là chúng ta có thể phản ứng với cùng một tín hiệu nhiều lần bằng cách xác định nhiều listeners. Để thực hiện tương tự với các callbacks, chúng ta phải viết nhiều logic hơn trong single available callback. Events là một cách tuyệt vời để các ứng dụng cho phép nhiều plugin bên ngoài xây dựng chức năng trên lõi của ứng dụng. Bạn có thể nghĩ về chúng như các điểm móc nối (hook points) để cho phép tùy chỉnh câu chuyện xung quanh một thay đổi trạng thái.
 
 #### Asynchronous Events
 
-Let's convert the synchronous sample example into something asynchronous and a little bit more useful.
+Hãy chuyển đổi synchronous sample example thành một cái gì đó không đồng bộ và hữu ích hơn một chút.
 
 ```js
 const fs = require('fs');
@@ -296,11 +296,11 @@ withTime.on('end', () => console.log('Done with execute'));
 withTime.execute(fs.readFile, __filename);
 ```
 
-The `WithTime` class executes an `asyncFunc` and reports the time that's taken by that `asyncFunc` using `console.time` and `console.timeEnd` calls. It emits the right sequence of events before and after the execution. And also emits error/data events to work with the usual signals of asynchronous calls.
+The `WithTime` class thực thi một `asyncFunc` và báo cáo thời gian mà `asyncFunc` sử dụng bằng cách sử dụng các lệnh `console.time` và `console.timeEnd`. Nó phát ra đúng trình tự các sự kiện trước và sau khi thực hiện. Và cũng phát ra các error/data events để làm việc với các tín hiệu thông thường của các cuộc gọi không đồng bộ.
 
-We test a `withTime` emitter by passing it an `fs.readFile` call, which is an asynchronous function. Instead of handling file data with a callback, we can now listen to the data event.
+Chúng ta kiểm tra `withTime` emitter bằng cách chuyển cho nó một lệnh gọi `fs.readFile`, đây là một hàm không đồng bộ. Thay vì xử lý dữ liệu tệp bằng một callback, bây giờ chúng ta có thể lắng nghe sự data event.
 
-When we execute this code , we get the right sequence of events, as expected, and we get a reported time for the execution, which is helpful:
+Khi chúng ta thực thi mã này, chúng ta nhận được trình tự sự kiện đúng như mong đợi và chúng ta nhận được thời gian báo cáo cho việc thực thi, điều này rất hữu ích:
 
 ```
 About to execute
@@ -308,7 +308,7 @@ execute: 4.507ms
 Done with execute
 ```
 
-Note how we needed to combine a callback with an event emitter to accomplish that. If the `asynFunc` supported promises as well, we could use the async/await feature to do the same:
+Lưu ý cách chúng ta cần kết hợp một callback với một event emitter để thực hiện điều đó. Nếu các `asynFunc` được hỗ trợ promises, chúng ta có thể sử dụng tính năng async/await để thực hiện tương tự:
 
 ```js
 class WithTime extends EventEmitter {
@@ -327,27 +327,27 @@ class WithTime extends EventEmitter {
 }
 ```
 
-I don't know about you, but this is much more readable to me than the callback-based code or any .then/.catch lines. The async/await feature brings us as close as possible to the JavaScript language itself, which I think is a big win.
+Tôi không biết bạn thấy thế nào, nhưng điều này đối với tôi dễ đọc hơn nhiều so với mã dựa trên callback-based hoặc bất kỳ dòng .then/.catch nào. Tính năng async/await mang lại cho chúng ta đến gần nhất có thể với chính ngôn ngữ JavaScript, mà tôi nghĩ là một chiến thắng lớn.
 
-#### Events Arguments and Errors
+#### Events Arguments and Errors
 
-In the previous example, there were two events that were emitted with extra arguments.
+Trong ví dụ trước, có hai sự kiện được phát ra với các đối số phụ.
 
-The error event is emitted with an error object.
+The error event được phát ra với một error object.
 
 ```js
 this.emit('error', err);
 ```
 
-The data event is emitted with a data object.
+The data event được phát ra với một data object.
 
 ```js
 this.emit('data', data);
 ```
 
-We can use as many arguments as we need after the named event, and all these arguments will be available inside the listener functions we register for these named events.
+Chúng ta có thể sử dụng tùy ý bao nhiêu đối số mà chúng ta cần sau sự kiện được đặt tên và tất cả các đối số này sẽ có sẵn bên trong các listener functions mà chúng ta đăng ký cho các sự kiện được đặt tên này.
 
-For example, to work with the data event, the listener function that we register will get access to the data argument that was passed to the emitted event and that data object is exactly what the `asyncFunc` exposes.
+Ví dụ, để làm việc với data event, the listener function mà chúng ta đăng ký sẽ có quyền truy cập vào data argument được truyền cho emitted event và data object đó chính xác là những gì `asyncFunc` phơi bày.
 
 ```js
 withTime.on('data', (data) => {
@@ -355,9 +355,9 @@ withTime.on('data', (data) => {
 });
 ```
 
-The `error` event is usually a special one. In our callback-based example, if we don't handle the error event with a listener, the node process will actually exit.
+The `error` event thường là một sự kiện đặc biệt. Trong ví dụ dựa trên callback-based của chúng ta, nếu chúng ta không xử lý the error event với listener, the node process sẽ thực sự thoát.
 
-To demonstrate that, make another call to the execute method with a bad argument:
+Để chứng minh điều đó, hãy thực hiện một cuộc gọi khác đến phương thức thực thi với một đối số xấu:
 
 ```js
 class WithTime extends EventEmitter {
@@ -379,7 +379,7 @@ withTime.execute(fs.readFile, ''); // BAD CALL
 withTime.execute(fs.readFile, __filename);
 ```
 
-The first execute call above will trigger an error. The node process is going to crash and exit:
+Cuộc gọi thực thi đầu tiên ở trên sẽ gây ra lỗi. The node process sẽ gặp sự cố và thoát:
 
 ```
 events.js:163
@@ -389,9 +389,9 @@ events.js:163
 Error: ENOENT: no such file or directory, open ''
 ```
 
-The second execute call will be affected by this crash and will potentially not get executed at all.
+Cuộc gọi thực thi thứ hai sẽ bị ảnh hưởng bởi sự cố này và có khả năng sẽ không được thực hiện.
 
-If we register a listener for the special `error` event, the behavior of the node process will change. For example:
+Nếu chúng ta đăng ký một listener cho sự kiện `error` đặc biệt, hành vi của node process sẽ thay đổi. Ví dụ:
 
 ```js
 withTime.on('error', (err) => {
@@ -400,14 +400,14 @@ withTime.on('error', (err) => {
 });
 ```
 
-If we do the above, the error from the first execute call will be reported but the node process will not crash and exit. The other execute call will finish normally:
+Nếu chúng ta làm như trên, lỗi từ cuộc gọi thực thi đầu tiên sẽ được báo cáo nhưng the node process sẽ không gặp sự cố và thoát. Cuộc gọi thực thi khác sẽ kết thúc bình thường:
 
 ```
 { Error: ENOENT: no such file or directory, open '' errno: -2, code: 'ENOENT', syscall: 'open', path: '' }
 execute: 4.276ms
 ```
 
-Note that Node currently behaves differently with promise-based functions and just outputs a warning, but that will eventually change:
+Lưu ý rằng Node hiện hành xử khác với các promise-based functions và chỉ đưa ra cảnh báo, nhưng điều đó cuối cùng sẽ thay đổi:
 
 ```
 UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 1): Error: ENOENT: no such file or directory, open ''
@@ -415,9 +415,9 @@ UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 1):
 DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
 ```
 
-The other way to handle exceptions from emitted errors is to register a listener for the global `uncaughtException`process event. However, catching errors globally with that event is a bad idea.
+Một cách khác để xử lý các trường hợp ngoại lệ từ các lỗi phát ra là đăng ký một listener cho global `uncaughtException` process event. Tuy nhiên, bắt lỗi trên toàn cầu với sự kiện đó là một ý tưởng tồi.
 
-The standard advice about `uncaughtException` is to avoid using it, but if you must do (say to report what happened or do cleanups), you should just let the process exit anyway:
+Lời khuyên tiêu chuẩn về `uncaughtException` là tránh sử dụng nó, nhưng nếu bạn phải làm (nói để báo cáo những gì đã xảy ra hoặc làm sạch), bạn vẫn nên để process exit:
 
 ```js
 process.on('uncaughtException', (err) => {
@@ -431,13 +431,13 @@ process.on('uncaughtException', (err) => {
 });
 ```
 
-However, imagine that multiple error events happen at the exact same time. This means the `uncaughtException`listener above will be triggered multiple times, which might be a problem for some cleanup code. An example of this is when multiple calls are made to a database shutdown action.
+Tuy nhiên, hãy tưởng tượng rằng nhiều error events xảy ra cùng một lúc. Điều này có nghĩa là `uncaughtException` listener ở trên sẽ được kích hoạt nhiều lần, đây có thể là một vấn đề đối với một số cleanup code. Một ví dụ về điều này là khi nhiều cuộc gọi được thực hiện cho một database shutdown action.
 
-The `EventEmitter` module exposes a `once` method. This method signals to invoke the listener just once, not every time it happens. So, this is a practical use case to use with the uncaughtException because with the first uncaught exception we'll start doing the cleanup and we know that we're going to exit the process anyway.
+Mô đun `EventEmitter` bày ra một phương thức `once`. Phương pháp này báo hiệu để gọi ra the listener một lần, không phải mỗi lần nó xảy ra. Vì vậy, đây là trường hợp sử dụng thực tế để sử dụng với `uncaughtException` vì với uncaught exception đầu tiên, chúng ta sẽ bắt đầu cleanup và chúng ta biết rằng dù sao chúng ta cũng sẽ thoát khỏi quy trình.
 
 #### Order of Listeners
 
-If we register multiple listeners for the same event, the invocation of those listeners will be in order. The first listener that we register is the first listener that gets invoked.
+Nếu chúng ta đăng ký nhiều listeners cho cùng một sự kiện, việc gọi những listeners đó sẽ theo thứ tự. The first listener mà chúng ta đăng ký là the first listener tiên được gọi.
 
 ```js
 // प्रथम
@@ -453,9 +453,9 @@ withTime.on('data', (data) => {
 withTime.execute(fs.readFile, __filename);
 ```
 
-The above code will cause the "Length" line to be logged before the "Characters" line, because that's the order in which we defined those listeners.
+Đoạn mã trên sẽ khiến dòng "Length" được ghi lại trước dòng "Characters", bởi vì đó là thứ tự mà chúng ta đã xác định những listeners đó.
 
-If you need to define a new listener, but have that listener invoked first, you can use the `prependListener` method:
+Nếu bạn cần xác định một listener mới, nhưng để listener đó được gọi ra trước, bạn có thể sử dụng phương thức `prependListener`:
 
 ```js
 // प्रथम
@@ -471,11 +471,11 @@ withTime.prependListener('data', (data) => {
 withTime.execute(fs.readFile, __filename);
 ```
 
-The above will cause the "Characters" line to be logged first.
+Ở trên sẽ làm cho dòng "Characters" được logged đầu tiên.
 
-And finally, if you need to remove a listener, you can use the `removeListener` method.
+Và cuối cùng, nếu bạn cần loại bỏ một listener, bạn có thể sử dụng phương thức `removeListener`.
 
-That's all I have for this topic. Thanks for reading! Until next time!
+Đó là tất cả những gì tôi có cho chủ đề này. Cảm ơn vì đã đọc! Cho đến lần sau!
 
 * * * * *
 
