@@ -1,45 +1,45 @@
-# Node.js Streams: Everything you need to know
+# Node.js Streams: Everything you need to know
 
-Node.js streams have a reputation for being hard to work with, and even harder to understand. Well I've got good news for you -- that's no longer the case.
+Các Node.js streams nổi tiếng là khó làm việc và thậm chí khó hiểu. Vâng, tôi đã có một tin tốt cho bạn -- đó không còn là vấn đề nữa.
 
-Over the years, developers created lots of packages out there with the sole purpose of making working with streams easier. But in this article, I'm going to focus on the native [Node.js stream API](https://nodejs.org/api/stream.html).
+Trong những năm qua, các nhà phát triển đã tạo ra rất nhiều gói ngoài kia với mục đích duy nhất là làm việc với các streams dễ dàng hơn. Nhưng trong bài viết này, tôi sẽ tập trung vào [Node.js stream API](https://nodejs.org/api/stream.html).
 
-> "Streams are Node's best and most misunderstood idea." - Dominic Tarr
+> "Streams là ý tưởng hay nhất và bị hiểu lầm nhất của Node." - Dominic Tarr
 
-### What exactly are streams?
+### What exactly are streams?
 
-Streams are collections of data -- just like arrays or strings. The difference is that streams might not be available all at once, and they don't have to fit in memory. This makes streams really powerful when working with large amounts of data, or data that's coming from an external source one *chunk* at a time.
+Streams là tập hợp dữ liệu -- giống như mảng hoặc chuỗi. Sự khác biệt là các streams có thể không có sẵn cùng một lúc và chúng không phải nằm gọn trong bộ nhớ. Điều này làm cho các streams thực sự mạnh mẽ khi làm việc với một lượng lớn dữ liệu hoặc dữ liệu đến từ một nguồn bên ngoài, một *chunk* tại một thời điểm.
 
-However, streams are not only about working with big data. They also give us the power of composability in our code. Just like we can compose powerful linux commands by piping other smaller Linux commands, we can do exactly the same in Node with streams.
+Tuy nhiên, các streams không chỉ là về làm việc với dữ liệu lớn. Chúng cũng cung cấp cho chúng ta sức mạnh của khả năng kết hợp trong mã của chúng ta. Giống như chúng ta có thể soạn các lệnh Linux mạnh mẽ bằng cách kết hợp các lệnh Linux nhỏ hơn khác, chúng ta có thể thực hiện chính xác như vậy trong Node với các streams.
 
 ![](images/1.png)
 
-*Composability with Linux commands*
+*Khả năng tương thích với các lệnh Linux*
 
 ```js
-const grep = ... // A stream for the grep output\
+const grep = ... // A stream for the grep output
 const wc = ... // A stream for the wc input
 
 grep.pipe(wc)
 ```
 
-Many of the built-in modules in Node implement the streaming interface:
+Nhiều built-in modules trong Node thực thi streaming interface:
 
 ![](images/2.png)
 
-*Screenshot captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-The list above has some examples for native Node.js objects that are also readable and writable streams. Some of these objects are both readable and writable streams, like TCP sockets, zlib and crypto streams.
+Danh sách trên có một số ví dụ cho các đối tượng Node.js gốc cũng có thể đọc và ghi được các streams. Một số đối tượng này là các streams có thể đọc và ghi được, như TCP sockets, zlib and crypto streams.
 
-Notice that the objects are also closely related. While an HTTP response is a readable stream on the client, it's a writable stream on the server. This is because in the HTTP case, we basically read from one object (`http.IncomingMessage`) and write to the other (`http.ServerResponse`).
+Lưu ý rằng các đối tượng đó cũng liên quan chặt chẽ. Mặc dù khi HTTP response là readable stream trên client, nó là writable stream trên server. Điều này là do trong trường hợp HTTP, về cơ bản chúng ta đọc từ một đối tượng (`http.IncomingMessage`) và ghi cho the other (`http.ServerResponse`).
 
-Also note how the `stdio` streams (`stdin`, `stdout`, `stderr`) have the inverse stream types when it comes to child processes. This allows for a really easy way to pipe to and from these streams from the main process `stdio` streams.
+Cũng lưu ý cách `stdio` streams (`stdin`, `stdout`, `stderr`) có các kiểu stream ngược (inverse stream) khi nói đến các child processes. Điều này cho phép một cách thực sự dễ dàng để truyền dữ liệu (pipe) đến và từ các streams này từ các main process `stdio` streams.
 
-### A streams practical example
+### Một ví dụ thực tế
 
-Theory is great, but often not 100% convincing. Let's see an example demonstrating the difference streams can make in code when it comes to memory consumption.
+Lý thuyết là tuyệt vời, nhưng thường không thuyết phục 100%. Chúng ta hãy xem một ví dụ minh họa các streams khác biệt có thể tạo ra mã khi nói đến mức tiêu thụ bộ nhớ.
 
-Let's create a big file first:
+Trước tiên hãy tạo một tệp lớn:
 
 ```js
 const fs = require('fs');
@@ -52,13 +52,13 @@ for(let i=0; i<= 1e6; i++) {
 file.end();
 ```
 
-Look what I used to create that big file. A writable stream!
+Hãy nhìn những gì tôi đã sử dụng để tạo tập tin lớn đó. Một writable stream!
 
-The `fs` module can be used to read from and write to files using a stream interface. In the example above, we're writing to that `big.file` through a writable stream 1 million lines with a loop.
+Mô đun `fs` có thể được sử dụng để đọc và ghi vào các tệp sử dụng stream interface. Trong ví dụ trên, chúng tôi đang viết cho `big.file` thông qua writable stream 1 triệu dòng bằng một vòng lặp.
 
-Running the script above generates a file that's about ~400 MB.
+Chạy đoạn script trên tạo ra một tệp khoảng ~400 MB.
 
-Here's a simple Node web server designed to exclusively serve the `big.file`:
+Đây là một simple Node web server được thiết kế để phục vụ riêng cho `big.file`:
 
 ```js
 const fs = require('fs');
@@ -75,25 +75,25 @@ server.on('request', (req, res) => {
 server.listen(8000);
 ```
 
-When the server gets a request, it'll serve the big file using the asynchronous method, `fs.readFile`. But hey, it's not like we're blocking the event loop or anything. Every thing is great, right? Right?
+Khi máy chủ nhận được yêu cầu, nó sẽ xử lý the big file bằng phương thức không đồng bộ, `fs.readFile`. Nhưng này, không giống như chúng ta chặn vòng lặp sự kiện hay bất cứ điều gì. Mọi thứ đều tuyệt vời, phải không? Đúng?
 
-Well, let's see what happens when we run the server, connect to it, and monitor the memory while doing so.
+Chà, hãy xem điều gì xảy ra khi chúng ta chạy máy chủ, kết nối với nó và theo dõi bộ nhớ trong khi làm như vậy.
 
-When I ran the server, it started out with a normal amount of memory, 8.7 MB:
+Khi tôi chạy máy chủ, nó khởi động với dung lượng bộ nhớ bình thường, 8,7 MB:
 
 ![](images/3.png)
 
-Then I connected to the server. Note what happened to the memory consumed:
+Sau đó, tôi kết nối với máy chủ. Lưu ý những gì đã xảy ra với bộ nhớ tiêu thụ:
 
 ![](images/4.gif)
 
-Wow -- the memory consumption jumped to 434.8 MB.
+Wow -- mức tiêu thụ bộ nhớ đã tăng lên 434.8 MB.
 
-We basically put the whole `big.file` content in memory before we wrote it out to the response object. This is very inefficient.
+Về cơ bản chúng ta đưa toàn bộ nội dung `big.file` vào bộ nhớ trước khi chúng ta viết nó ra cho response object. Điều này rất không hiệu quả.
 
-The HTTP response object (`res` in the code above) is also a writable stream. This means if we have a readable stream that represents the content of `big.file`, we can just pipe those two on each other and achieve mostly the same result without consuming ~400 MB of memory.
+The HTTP response object (`res` trong đoạn mã trên) cũng là một writable stream. Điều này có nghĩa là nếu chúng ta có một readable stream đại diện cho nội dung của `big.file`, chúng ta có thể kết nối hai thứ đó với nhau và đạt được kết quả tương tự mà không tốn ~400 MB bộ nhớ.
 
-Node's `fs` module can give us a readable stream for any file using the `createReadStream` method. We can pipe that to the response object:
+Node's `fs` module có thể cung cấp cho chúng ta một readable stream cho bất kỳ tệp nào bằng cách sử dụng phương thức `createReadStream`. Chúng ta có thể truyền dữ liệu (pipe) đó đến response object:
 
 ```js
 const fs = require('fs');
@@ -107,42 +107,42 @@ server.on('request', (req, res) => {
 server.listen(8000);
 ```
 
-Now when you connect to this server, a magical thing happens (look at the memory consumption):
+Bây giờ khi bạn kết nối với máy chủ này, một điều kỳ diệu sẽ xảy ra (nhìn vào mức tiêu thụ bộ nhớ):
 
 ![](images/5.gif)
 
-*What's happening?*
+*Chuyện gì đang xảy ra?*
 
-When a client asks for that big file, we stream it one chunk at a time, which means we don't buffer it in memory at all. The memory usage grew by about 25 MB and that's it.
+Khi một khách hàng yêu cầu tệp lớn đó, chúng ta sẽ stream nó từng đoạn một (one chunk at a time), điều đó có nghĩa là chúng ta không buffer nó trong bộ nhớ. Việc sử dụng bộ nhớ tăng khoảng 25 MB và đó là nó.
 
-You can push this example to its limits. Regenerate the `big.file` with five million lines instead of just one million, which would take the file to well over 2 GB, and that's actually bigger than the default buffer limit in Node.
+Bạn có thể đẩy ví dụ này đến giới hạn của nó. Tạo lại `big.file` với năm triệu dòng thay vì chỉ một triệu, sẽ đưa tệp lên hơn 2 GB và thực sự lớn hơn giới hạn bộ đệm (buffer limit) mặc định trong Node.
 
-If you try to serve that file using `fs.readFile`, you simply can't, by default (you can change the limits). But with `fs.createReadStream`, there is no problem at all streaming 2 GB of data to the requester, and best of all, the process memory usage will roughly be the same.
+Nếu bạn cố gắng xử lý tệp đó bằng cách sử dụng `fs.readFile`, bạn đơn giản là không thể theo mặc định (bạn có thể thay đổi the limits). Nhưng với `fs.createReadStream`, không có vấn đề gì trong việc truyền 2 GB dữ liệu đến người yêu cầu, và tốt nhất, việc process sử dụng bộ nhớ sẽ gần như giống nhau.
 
-Ready to learn streams now?
+Sẵn sàng để học stream bây giờ?
 
-> This article is a write-up of part of [my Pluralsight course about Node.js](https://www.pluralsight.com/courses/nodejs-advanced). I cover similar content in video format there.
+> Bài viết này là một phần của [khóa học Pluralsight của tôi về Node.js](https://www.pluralsight.com/cifts/nodejs-advified). Tôi bao gồm nội dung tương tự ở định dạng video ở đó.
 
 ### Streams 101
 
-There are four fundamental stream types in Node.js: Readable, Writable, Duplex, and Transform streams.
+Có bốn kiểu stream cơ bản trong Node.js: Readable, Writable, Duplex, and Transform streams.
 
-- A readable stream is an abstraction for a source from which data can be consumed. An example of that is the `fs.createReadStream` method.
-- A writable stream is an abstraction for a destination to which data can be written. An example of that is the `fs.createWriteStream` method.
-- A duplex streams is both Readable and Writable. An example of that is a TCP socket.
-- A transform stream is basically a duplex stream that can be used to modify or transform the data as it is written and read. An example of that is the `zlib.createGzip` stream to compress the data using gzip. You can think of a transform stream as a function where the input is the writable stream part and the output is readable stream part. You might also hear transform streams referred to as "*through streams*."
+- Một readable stream là một sự trừu tượng cho một nguồn mà data có thể được tiêu thụ. Một ví dụ về điều đó là phương thức `fs.createReadStream`.
+- Một writable stream là một sự trừu tượng (abstraction) cho đích mà dữ liệu có thể được ghi. Một ví dụ về điều đó là phương thức `fs.createWriteStream`.
+- Một duplex streams là có thể cả đọc và ghi được. Một ví dụ về điều đó là một TCP socket.
+- Một transform stream về cơ bản là một duplex stream có thể được sử dụng để sửa đổi hoặc biến đổi dữ liệu khi được ghi và đọc. Một ví dụ về điều đó là `zlib.createGzip` stream để nén dữ liệu bằng gzip. Bạn có thể nghĩ về một transform stream là một hàm trong đó đầu vào là phần writable stream và đầu ra là phần readable stream. Bạn cũng có thể nghe thấy các transform streams được gọi là "*qua các luồng (through streams)*."
 
-All streams are instances of `EventEmitter`. They emit events that can be used to read and write data. However, we can consume streams data in a simpler way using the `pipe` method.
+Tất cả các streams là các thực thể (instances) của `EventEmitter`. Chúng phát ra các sự kiện (emit events) có thể được sử dụng để đọc và ghi dữ liệu. Tuy nhiên, chúng ta có thể sử dụng streams data theo cách đơn giản hơn bằng cách sử dụng phương thức `pipe`.
 
-#### The pipe method
+#### The pipe method
 
-Here's the magic line that you need to remember:
+Đây là dòng ma thuật mà bạn cần nhớ:
 
 ```js
 readableSrc.pipe(writableDest)
 ```
 
-In this simple line, we're piping the output of a readable stream -- the source of data, as the input of a writable stream -- the destination. The source has to be a readable stream and the destination has to be a writable one. Of course, they can both be duplex/transform streams as well. In fact, if we're piping into a duplex stream, we can chain pipe calls just like we do in Linux:
+Trong dòng đơn giản này, chúng ta đang dẫn đầu ra (piping) của một readable stream -- nguồn dữ liệu, là đầu vào của writable stream -- đích. Nguồn phải là một readable stream và đích phải là một writable stream. Tất nhiên, cả hai đều có thể là duplex/transform streams. Trên thực tế, nếu chúng ta piping tới một duplex stream, chúng ta có thể chain pipe calls giống như chúng ta làm trong Linux:
 
 ```js
 readableSrc
@@ -151,7 +151,7 @@ readableSrc
   .pipe(finalWrtitableDest)
 ```
 
-The `pipe` method returns the destination stream, which enabled us to do the chaining above. For streams `a`(readable), `b` and `c` (duplex), and `d` (writable), we can:
+Phương thức `pipe` trả về stream đích, cho phép chúng ta thực hiện chaining ở trên. Đối với các streams `a` (readable), `b` và `c` (duplex), và `d` (writable), chúng ta có thể:
 
 ```js
 a.pipe(b).pipe(c).pipe(d)
@@ -165,17 +165,17 @@ c.pipe(d)
 $ a | b | c | d
 ```
 
-The `pipe` method is the easiest way to consume streams. It's generally recommended to either use the `pipe` method or consume streams with events, but avoid mixing these two. Usually when you're using the `pipe` method you don't need to use events, but if you need to consume the streams in more custom ways, events would be the way to go.
+Phương thức `pipe` là cách dễ nhất để tiêu thụ streams. Nói chung, nên sử dụng phương thức `pipe` hoặc tiêu thụ streams với các sự kiện (events), nhưng tránh trộn lẫn hai thứ này. Thông thường khi bạn đang sử dụng phương thức `pipe`, bạn không cần sử dụng các events, nhưng nếu bạn cần tiêu thụ các streams theo nhiều cách tùy chỉnh hơn, các events sẽ là cách tốt nhất.
 
 #### Stream events
 
-Beside reading from a readable stream source and writing to a writable destination, the `pipe` method automatically manages a few things along the way. For example, it handles errors, end-of-files, and the cases when one stream is slower or faster than the other.
+Bên cạnh việc đọc từ nguồn readable stream và ghi tới một writable stream đích, phương thức `pipe` sẽ tự động quản lý một số thứ trên đường đi. Ví dụ: nó xử lý các lỗi, end-of-files, và các trường hợp khi một stream chậm hơn hoặc nhanh hơn các stream khác.
 
-However, streams can also be consumed with events directly. Here's the simplified event-equivalent code of what the `pipe` method mainly does to read and write data:
-
-# readable.pipe(writable)
+Tuy nhiên, streams cũng có thể được tiêu thụ với các events trực tiếp. Đây là mã tương đương với sự kiện được đơn giản hóa về cách phương thức `pipe` chủ yếu làm để đọc và ghi dữ liệu:
 
 ```js
+# readable.pipe(writable)
+
 readable.on('data', (chunk) => {
   writable.write(chunk);
 });
@@ -185,76 +185,76 @@ readable.on('end', () => {
 });
 ```
 
-Here's a list of the important events and functions that can be used with readable and writable streams:
+Dưới đây là danh sách các sự kiện và functions quan trọng có thể được sử dụng với các readable and writable streams:
 
 ![](images/6.png)
 
-*Screenshot captured from my Pluralsight course - Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-The events and functions are somehow related because they are usually used together.
+Các events và functions có liên quan nào đó bởi vì chúng thường được sử dụng cùng nhau.
 
-The most important events on a readable stream are:
+Các sự kiện quan trọng nhất trên một readable stream là:
 
-- The `data` event, which is emitted whenever the stream passes a chunk of data to the consumer
-- The `end` event, which is emitted when there is no more data to be consumed from the stream.
+- The `data` event, được emitted bất cứ khi nào stream truyền một a chunk đến consumer.
+- The `end` event, được emitted khi không còn dữ liệu nào được tiêu thụ (consumed) từ stream.
 
-The most important events on a writable stream are:
+Các sự kiện quan trọng nhất trên một writable stream là:
 
-- The `drain` event, which is a signal that the writable stream can receive more data.
-- The `finish` event, which is emitted when all data has been flushed to the underlying system.
+- The `drain` event, là tín hiệu cho thấy writable stream có thể nhận được nhiều dữ liệu hơn.
+- The `finish` event, được emitted khi tất cả dữ liệu đã được flushed tới underlying system.
 
-Events and functions can be combined to make for a custom and optimized use of streams. To consume a readable stream, we can use the `pipe`/`unpipe` methods, or the `read`/`unshift`/`resume` methods. To consume a writable stream, we can make it the destination of `pipe`/`unpipe`, or just write to it with the `write` method and call the `end` method when we're done.
+Các events and functions có thể được kết hợp để tạo ra việc tùy chỉnh và tối ưu hóa sử dụng của streams. Để sử dụng (consume) một readable stream, chúng ta có thể sử dụng các phương thức `pipe`/`unpipe` hoặc các phương thức `read`/`unshift`/`resume`. Để sử dụng (consume) một writable stream, chúng ta có thể biến nó thành đích của `pipe`/`unpipe`, hoặc chỉ cần viết tới nó bằng phương thức `write` và gọi phương thức `end` khi chúng ta hoàn thành.
 
-#### Paused and Flowing Modes of Readable Streams
+#### Paused and Flowing Modes of Readable Streams
 
-Readable streams have two main modes that affect the way we can consume them:
+Readable streams có hai chế độ chính ảnh hưởng đến cách chúng ta có thể tiêu thụ (consume) chúng:
 
-- They can be either in the **paused** mode
-- Or in the **flowing** mode
+- Chúng có thể ở chế độ **paused**.
+- Hoặc ở chế độ **chảy (flowing)**.
 
-Those modes are sometimes referred to as pull and push modes.
+Những chế độ này đôi khi được gọi là chế độ kéo và đẩy (pull and push modes).
 
-All readable streams start in the paused mode by default but they can be easily switched to flowing and back to paused when needed. Sometimes, the switching happens automatically.
+Tất cả các readable streams bắt đầu ở chế độ paused theo mặc định nhưng chúng có thể dễ dàng chuyển sang flowing và quay lại paused khi cần. Đôi khi, việc chuyển đổi xảy ra tự động.
 
-When a readable stream is in the paused mode, we can use the `read()` method to read from the stream on demand, however, for a readable stream in the flowing mode, the data is continuously flowing and we have to listen to events to consume it.
+Khi một readable stream ở chế độ paused, chúng ta có thể sử dụng phương thức `read()` để đọc từ stream theo yêu cầu, tuy nhiên, đối với readable stream ở chế độ flowing, dữ liệu sẽ liên tục chảy (continuously flowing) và chúng ta phải lắng nghe sự kiện để tiêu thụ (consume) nó.
 
-In the flowing mode, data can actually be lost if no consumers are available to handle it. This is why, when we have a readable stream in flowing mode, we need a `data` event handler. In fact, just adding a `data` event handler switches a paused stream into flowing mode and removing the `data` event handler switches the stream back to paused mode. Some of this is done for backward compatibility with the older Node streams interface.
+Trong chế độ flowing, dữ liệu thực sự có thể bị mất nếu không có consumers nào sẵn sàng xử lý nó. Đây là lý do tại sao, khi chúng ta có một readable stream ở chế độ flowing, chúng ta cần một `data` event handler. Trong thực tế, chỉ cần thêm một `data` event handler sẽ chuyển một paused stream sang chế độ flowing và loại bỏ the `data` event handler sẽ chuyển stream  trở lại chế độ paused. Một số điều này được thực hiện để tương thích ngược với older Node streams interface.
 
-To manually switch between these two stream modes, you can use the `resume()` and `pause()` methods.
+Để chuyển đổi thủ công giữa hai chế độ stream này, bạn có thể sử dụng các phương thức `resume()` và `pause()`.
 
 ![](images/7.png)
 
-*Screenshot captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-When consuming readable streams using the `pipe` method, we don't have to worry about these modes as `pipe` manages them automatically.
+Khi tiêu thụ các readable streams bằng phương thức `pipe`, chúng ta không phải lo lắng về các chế độ này vì `pipe` tự động quản lý chúng.
 
-### Implementing Streams
+### Thực thi luồng (Implementing Streams)
 
-When we talk about streams in Node.js, there are two main different tasks:
+Khi chúng ta nói về các streams trong Node.js, có hai nhiệm vụ khác nhau chính:
 
-- The task of **implementing** the streams.
-- The task of **consuming** them.
+- Nhiệm vụ của **thực thi (implementing)** các luồng.
+- Nhiệm vụ của **tiêu thụ (consuming)** chúng.
 
-So far we've been talking about only consuming streams. Let's implement some!
+Cho đến nay chúng ta chỉ đã nói về việc tiêu thụ các luồng (consuming streams). Hãy thực thi một chút! (Let's implement some!)
 
-Stream implementers are usually the ones who `require` the `stream` module.
+Stream implementers thường là những người `require` mô đun `stream`.
 
-#### Implementing a Writable Stream
+#### Implementing a Writable Stream
 
-To implement a writable stream, we need to to use the `Writable` constructor from the stream module.
+Để thực thi một writable stream, chúng ta cần sử dụng `Writable` constructor từ stream module.
 
 ```js
 const { Writable } = require('stream');
 ```
 
-We can implement a writable stream in many ways. We can, for example, extend the `Writable` constructor if we want
+Chúng ta có thể thực thi một writable stream theo nhiều cách. Ví dụ, chúng ta có thể extend the `Writable` constructor nếu muốn.
 
 ```js
 class myWritableStream extends Writable {
 }
 ```
 
-However, I prefer the simpler constructor approach. We just create an object from the `Writable` constructor and pass it a number of options. The only required option is a `write` function which exposes the chunk of data to be written.
+Tuy nhiên, tôi thích cách tiếp cận simpler constructor hơn. Chúng ta chỉ cần tạo một đối tượng từ `Writable` constructor và truyền cho nó một số tùy chọn. Tùy chọn bắt buộc duy nhất là một `write` function trình bày chunk of data được ghi.
 
 ```js
 const { Writable } = require('stream');
@@ -269,27 +269,27 @@ const outStream = new Writable({
 process.stdin.pipe(outStream);
 ```
 
-This write method takes three arguments.
+Phương thức write này có ba đối số.
 
-- The **chunk** is usually a buffer unless we configure the stream differently.
-- The **encoding** argument is needed in that case, but usually we can ignore it.
-- The **callback** is a function that we need to call after we're done processing the data chunk. It's what signals whether the write was successful or not. To signal a failure, call the callback with an error object.
+- The **chunk** thường là một bộ đệm (buffer) trừ khi chúng ta cấu hình stream khác.
+- Đối số **encoding** là cần thiết trong trường hợp đó, nhưng thông thường chúng ta có thể bỏ qua nó.
+- The **callback** là một function mà chúng ta cần gọi sau khi chúng ta xử lý xong the data chunk. Đó là những gì báo hiệu cho dù the write đã thành công hay không. Để báo hiệu lỗi, gọi callback với một error object.
 
-In `outStream`, we simply `console.log` the chunk as a string and call the `callback` after that without an error to indicate success. This is a very simple and probably not so useful *echo* stream. It will echo back anything it receives.
+Trong `outStream`, chúng ta chỉ đơn giản là `console.log` chunk dưới dạng một chuỗi và gọi `callback` sau đó mà không có lỗi để biểu thị thành công. Đây là một *echo* stream rất đơn giản và có thể không hữu ích. Nó sẽ echo back bất cứ điều gì nó nhận được.
 
-To consume this stream, we can simply use it with `process.stdin`, which is a readable stream, so we can just pipe `process.stdin` into our `outStream`.
+Để consume stream này, chúng ta chỉ cần sử dụng nó với `process.stdin`, đây là một readable stream, vì vậy chúng ta có thể chuyển `process.stdin` vào `outStream`.
 
-When we run the code above, anything we type into `process.stdin` will be echoed back using the `outStream` `console.log` line.
+Khi chúng ta chạy mã ở trên, bất cứ điều gì chúng ta nhập vào `process.stdin` sẽ được echoed back bằng cách sử dụng dòng `outStream` `console.log`.
 
-This is not a very useful stream to implement because it's actually already implemented and built-in. This is very much equivalent to `process.stdout`. We can just pipe `stdin` into `stdout` and we'll get the exact same echo feature with this single line:
+Đây không phải là một very useful stream để thực thi bởi vì nó thực sự đã được triển khai và tích hợp sẵn. Điều này rất giống với `process.stdout`. Chúng ta chỉ có thể chuyển `stdin` thành `stdout` và chúng ta sẽ có được tính năng echo giống hệt với dòng đơn này:
 
 ```js
 process.stdin.pipe(process.stdout);
 ```
 
-#### Implement a Readable Stream
+#### Implement a Readable Stream
 
-To implement a readable stream, we require the `Readable` interface, and construct an object from it, and implement a `read()` method in the stream's configuration parameter:
+Để thực thi một readable stream, chúng ta yêu cầu `Readable` interface, và xây dựng (construct) một đối tượng từ nó và thực thi một phương thức `read()` trong tham số cấu hình của stream:
 
 ```js
 const { Readable } = require('stream');
@@ -299,7 +299,7 @@ const inStream = new Readable({
 });
 ```
 
-There is a simple way to implement readable streams. We can just directly `push` the data that we want the consumers to consume.
+Có một cách đơn giản để thực thi các readable streams. Chúng ta chỉ cần trực tiếp `push` dữ liệu mà chúng ta muốn consumers  tiêu thụ.
 
 ```js
 const { Readable } = require('stream');
@@ -316,13 +316,13 @@ inStream.push(null); // No more data
 inStream.pipe(process.stdout);
 ```
 
-When we `push` a `null` object, that means we want to signal that the stream does not have any more data.
+Khi chúng ta `push` một `null` object, điều đó có nghĩa là chúng ta muốn báo hiệu rằng stream không có thêm dữ liệu.
 
-To consume this simple readable stream, we can simply pipe it into the writable stream `process.stdout`.
+Để consume (tiêu thụ) readable stream giản này, chúng ta có thể đơn giản pipe nó vào writable stream `process.stdout`.
 
-When we run the code above, we'll be reading all the data from `inStream` and echoing it to the standard out. Very simple, but also not very efficient.
+Khi chúng ta chạy mã ở trên, chúng ta sẽ đọc tất cả dữ liệu từ `inStream` và echoing mã đó tới standard out. Rất đơn giản, nhưng cũng không hiệu quả lắm.
 
-We're basically pushing all the data in the stream *before* piping it to `process.stdout`. The much better way is to push data *on demand*, when a consumer asks for it. We can do that by implementing the `read()` method in the configuration object:
+Về cơ bản, chúng ta đang đẩy (pushing) tất cả dữ liệu trong stream *trước khi* piping nó tới `process.stdout`. Cách tốt hơn nhiều là đẩy dữ liệu *theo yêu cầu*, khi consumer yêu cầu. Chúng ta có thể làm điều đó bằng cách thực thi phương thức `read()` trong configuration object:
 
 ```js
 const inStream = new Readable({
@@ -332,7 +332,7 @@ const inStream = new Readable({
 });
 ```
 
-When the read method is called on a readable stream, the implementation can push partial data to the queue. For example, we can push one letter at a time, starting with character code 65 (which represents A), and incrementing that on every push:
+Khi phương thức read được gọi trên một readable stream, việc thực thi có thể push một phần dữ liệu vào hàng đợi. Ví dụ: chúng ta có thể push từng chữ cái một, bắt đầu bằng mã ký tự 65 (đại diện cho A) và tăng ký tự đó trên mỗi lần đẩy:
 
 ```js
 const inStream = new Readable({
@@ -349,15 +349,15 @@ inStream.currentCharCode = 65;
 inStream.pipe(process.stdout);
 ```
 
-While the consumer is reading a readable stream, the `read` method will continue to fire, and we'll push more letters. We need to stop this cycle somewhere, and that's why an if statement to push null when the currentCharCode is greater than 90 (which represents Z).
+Trong khi consumer đang đọc một readable stream, phương thức `read` sẽ tiếp tục kích hoạt, và chúng ta sẽ đẩy nhiều chữ cái hơn. Chúng ta cần dừng chu trình này ở đâu đó và đó là lý do tại sao một câu lệnh if sẽ đẩy null khi currentCharCode lớn hơn 90 (đại diện cho Z).
 
-This code is equivalent to the simpler one we started with but now we're pushing data on demand when the consumer asks for it. You should always do that.
+Mã này tương đương với mã đơn giản hơn mà chúng ta đã bắt đầu nhưng bây giờ chúng ta đang đẩy dữ liệu theo yêu cầu khi consumer yêu cầu. Bạn nên luôn luôn làm điều đó.
 
 #### Implementing Duplex/Transform Streams
 
-With Duplex streams, we can implement both readable and writable streams with the same object. It's as if we inherit from both interfaces.
+Với các duplex streams, chúng ta có thể thực thi cả các readable and writable streams với cùng một đối tượng. Như thể chúng ta kế thừa từ cả hai interfaces.
 
-Here's an example duplex stream that combines the two writable and readable examples implemented above:
+Dưới đây là một ví dụ duplex stream kết hợp hai writable and readable được triển khai ở trên:
 
 ```js
 const { Duplex } = require('stream');
@@ -381,15 +381,15 @@ inoutStream.currentCharCode = 65;
 process.stdin.pipe(inoutStream).pipe(process.stdout);
 ```
 
-By combining the methods, we can use this duplex stream to read the letters from A to Z and we can also use it for its echo feature. We pipe the readable `stdin` stream into this duplex stream to use the echo feature and we pipe the duplex stream itself into the writable `stdout` stream to see the letters A through Z.
+Bằng cách kết hợp các phương thức, chúng ta có thể sử dụng duplex stream để đọc các chữ cái từ A đến Z và chúng ta cũng có thể sử dụng nó cho tính năng echo của nó. Chúng ta pipe readable `stdin` stream vào duplex stream này để sử dụng tính năng echo và chúng ta pipe chính duplex stream vào writable `stdout` stream để xem các chữ cái từ A đến Z.
 
-It's important to understand that the readable and writable sides of a duplex stream operate completely independently from one another. This is merely a grouping of two features into an object.
+Điều quan trọng là phải hiểu rằng các mặt readable và writable của duplex stream hoạt động hoàn toàn độc lập với nhau. Đây chỉ đơn thuần là nhóm hai tính năng thành một đối tượng.
 
-A transform stream is the more interesting duplex stream because its output is computed from its input.
+một transform stream thú vị hơn là duplex stream vì đầu ra của nó được tính từ đầu vào của nó.
 
-For a transform stream, we don't have to implement the `read` or `write` methods, we only need to implement a `transform` method, which combines both of them. It has the signature of the `write` method and we can use it to `push` data as well.
+Đối với một transform stream, chúng ta không phải thực thi các phương thức `read` hoặc `write`, chúng ta chỉ cần thực thi một phương thức `transform`, mà đã kết hợp cả hai phương thức. Nó có signature của phương thức `write` và chúng ta cũng có thể sử dụng nó để `push` dữ liệu.
 
-Here's a simple transform stream which echoes back anything you type into it after transforming it to upper case format:
+Đây là một simple transform stream mà sẽ echoes back bất cứ thứ gì bạn nhập vào sau khi chuyển đổi nó sang định dạng chữ hoa:
 
 ```js
 const { Transform } = require('stream');
@@ -404,13 +404,13 @@ const upperCaseTr = new Transform({
 process.stdin.pipe(upperCaseTr).pipe(process.stdout);
 ```
 
-In this transform stream, which we're consuming exactly like the previous duplex stream example, we only implemented a `transform()` method. In that method, we convert the `chunk` into its upper case version and then `push` that version as the readable part.
+Trong transform stream này, chúng ta đang tiêu thụ (consuming) chính xác như ví dụ duplex stream trước đó, chúng ta chỉ thực hiện một phương thức `transform()`. Trong phương thức đó, chúng ta convert the `chunk` thành phiên bản chữ hoa và sau đó là `push` phiên bản đó thành phần readable.
 
-#### Streams Object Mode
+#### Streams Object Mode
 
-By default, streams expect Buffer/String values. There is an `objectMode` flag that we can set to have the stream accept any JavaScript object.
+Theo mặc định, các streams mong đợi các giá trị Buffer/String. Có một `objectMode` flag mà chúng ta có thể đặt để stream chấp nhận bất kỳ đối tượng JavaScript nào.
 
-Here's a simple example to demonstrate that. The following combination of transform streams makes for a feature to map a string of comma-separated values into a JavaScript object. So `"a,b,c,d"` becomes `{a: b, c: d}`.
+Đây là một ví dụ đơn giản để chứng minh điều đó. Sự kết hợp các transform streams sau đây làm cho một tính năng map một chuỗi các giá trị được phân tách bằng dấu phẩy thành một đối tượng JavaScript. Vì vậy `"a,b,c,d"` trở thành `{a: b, c: d}`.
 
 ```js
 const { Transform } = require('stream');
@@ -454,19 +454,19 @@ process.stdin
   .pipe(process.stdout)
 ```
 
-We pass the input string (for example, `"a,b,c,d"`) through `commaSplitter` which pushes an array as its readable data (`["a", "b", "c", "d"]`). Adding the `readableObjectMode` flag on that stream is necessary because we're pushing an object there, not a string.
+Chúng ta chuyển chuỗi đầu vào (ví dụ: `"a,b,c,d"`) thông qua `commaSplitter` để đẩy một mảng thành readable data của nó (`["a", "b", "c", "d"]`). Việc thêm cờ `readableObjectMode` trên stream đó là cần thiết bởi vì chúng ta đang đẩy một đối tượng ở đó, không phải là một chuỗi.
 
-We then take the array and pipe it into the `arrayToObject` stream. We need a `writableObjectMode` flag to make that stream accept an object. It'll also push an object (the input array mapped into an object) and that's why we also needed the `readableObjectMode` flag there as well. The last `objectToString` stream accepts an object but pushes out a string, and that's why we only needed a `writableObjectMode` flag there. The readable part is a normal string (the stringified object).
+Sau đó chúng ta lấy mảng và dẫn nó vào `arrayToObject` stream. Chúng ta cần một cờ `writableObjectMode` để làm cho stream đó chấp nhận một đối tượng. Nó cũng sẽ đẩy một đối tượng (mảng đầu vào được ánh xạ (mapped) vào một đối tượng) và đó là lý do tại sao chúng ta cũng cần cờ `readableObjectMode` ở đó. `objectToString` stream cuối cùng chấp nhận một đối tượng nhưng đẩy ra một chuỗi và đó là lý do tại sao chúng ta chỉ cần một cờ `writableObjectMode` ở đó. Phần readable là một chuỗi bình thường (the stringified object).
 
 ![](images/8.png)
 
-*Usage of the example above*
+*Usage of the example above*
 
 #### Node's built-in transform streams
 
-Node has a few very useful built-in transform streams. Namely, the zlib and crypto streams.
+Node có một vài built-in transform streams rất hữu ích. Cụ thể, các zlib và crypto streams.
 
-Here's an example that uses the `zlib.createGzip()` stream combined with the `fs` readable/writable streams to create a file-compression script:
+Dưới đây là một ví dụ sử dụng the `zlib.createGzip()` stream kết hợp với các `fs` readable/writable streams để tạo file-compression script:
 
 ```js
 const fs = require('fs');
@@ -478,9 +478,9 @@ fs.createReadStream(file)
   .pipe(fs.createWriteStream(file + '.gz'));
 ```
 
-You can use this script to gzip any file you pass as the argument. We're piping a readable stream for that file into the zlib built-in transform stream and then into a writable stream for the new gzipped file. Simple.
+Bạn có thể sử dụng script này để gzip bất kỳ tệp nào bạn truyền làm đối số. Chúng ta đang truyền một readable stream cho tệp đó vào zlib built-in transform stream và sau đó thành một writable stream cho tệp gzipped mới. Đơn giản.
 
-The cool thing about using pipes is that we can actually combine them with events if we need to. Say, for example, I want the user to see a progress indicator while the script is working and a "Done" message when the script is done. Since the `pipe` method returns the destination stream, we can chain the registration of events handlers as well:
+Điều thú vị của việc sử dụng pipes là chúng ta thực sự có thể kết hợp chúng với các sự kiện nếu chúng ta cần. Ví dụ, tôi muốn user thấy một chỉ báo tiến trình (progress indicator) trong khi script đang làm việc và một thông báo "Done" khi script được hoàn thành. Vì phương thức `pipe` trả về stream đích, chúng ta cũng có thể xâu chuỗi (chain) đăng ký (registration) của các events handlers:
 
 ```js
 const fs = require('fs');
@@ -489,14 +489,14 @@ const file = process.argv[2];
 
 fs.createReadStream(file)
   .pipe(zlib.createGzip())
- .on('data', () => process.stdout.write('.'))
+  .on('data', () => process.stdout.write('.'))
   .pipe(fs.createWriteStream(file + '.zz'))
   .on('finish', () => console.log('Done'));
 ```
 
-So with the `pipe` method, we get to easily consume streams, but we can still further customize our interaction with those streams using events where needed.
+Vì vậy, với phương thức `pipe`, chúng ta có thể dễ dàng tiêu thụ các luồng (consume streams), nhưng chúng ta vẫn có thể tùy chỉnh thêm tương tác của mình với các streams đó bằng các sự kiện khi cần thiết.
 
-What's great about the `pipe` method though is that we can use it to *compose* our program piece by piece, in a much readable way. For example, instead of listening to the `data` event above, we can simply create a transform stream to report progress, and replace the `.on()` call with another `.pipe()` call:
+Điều tuyệt vời về phương thức `pipe` là chúng ta có thể sử dụng nó để *soạn (compose)* từng phần chương trình của mình theo cách dễ đọc. Ví dụ, thay vì listening the `data` event ở trên, chúng ta chỉ cần tạo một transform stream để báo cáo tiến trình (report progress), và thay thế cuộc gọi `.on()` bằng một cuộc gọi `.pipe()` khác:
 
 ```js
 const fs = require('fs');
@@ -519,9 +519,9 @@ fs.createReadStream(file)
   .on('finish', () => console.log('Done'));
 ```
 
-This `reportProgress` stream is a simple pass-through stream, but it reports the progress to standard out as well. Note how I used the second argument in the `callback()` function to push the data inside the `transform()` method. This is equivalent to pushing the data first.
+`reportProgress` stream này là một stream truyền qua đơn giản (simple pass-through stream), nhưng nó cũng báo cáo tiến trình theo tiêu chuẩn. Lưu ý cách tôi đã sử dụng đối số thứ hai trong hàm `callback()` để đẩy dữ liệu bên trong phương thức `transform()`. Điều này tương đương với việc đẩy dữ liệu đầu tiên.
 
-The applications of combining streams are endless. For example, if we need to encrypt the file before or after we gzip it, all we need to do is pipe another transform stream in that exact order that we needed. We can use Node's `crypto` module for that:
+Các ứng dụng kết hợp các streams là vô tận. Ví dụ: nếu chúng ta cần mã hóa tệp trước hoặc sau khi chúng ta gzip nó, tất cả những gì chúng ta cần làm là chuyển một transform stream khác theo thứ tự chính xác mà chúng ta cần. Chúng ta có thể sử dụng mô đun `crypto` của Node cho điều đó:
 
 ```js
 const crypto = require('crypto');
@@ -535,9 +535,9 @@ fs.createReadStream(file)
   .on('finish', () => console.log('Done'));
 ```
 
-The script above compresses and then encrypts the passed file and only those who have the secret can use the outputted file. We can't unzip this file with the normal unzip utilities because it's encrypted.
+Kịch bản trên nén và sau đó mã hóa tệp đã qua và chỉ những người có secret mới có thể sử dụng tệp xuất ra. Chúng tôi không thể giải nén tệp này với các tiện ích giải nén thông thường vì nó được mã hóa.
 
-To actually be able to unzip anything zipped with the script above, we need to use the opposite streams for crypto and zlib in a reverse order, which is simple:
+Để thực sự có thể giải nén bất cứ thứ gì được nén bằng tập lệnh ở trên, chúng ta cần sử dụng các streams ngược lại cho crypto và zlib theo thứ tự ngược lại, rất đơn giản:
 
 ```js
 fs.createReadStream(file)
@@ -548,9 +548,9 @@ fs.createReadStream(file)
   .on('finish', () => console.log('Done'));
 ```
 
-Assuming the passed file is the compressed version, the code above will create a read stream from that, pipe it into the crypto `createDecipher()` stream (using the same secret), pipe the output of that into the zlib `createGunzip()` stream, and then write things out back to a file without the extension part.
+Giả sử tệp đã truyền là phiên bản nén, đoạn mã trên sẽ tạo ra một luồng đọc (read stream) từ đó, dẫn nó vào crypto `createDecipher()` stream (sử dụng cùng một secret), chuyển đầu ra của nó vào zlib `createGunzip()` stream, và sau đó ghi lại mọi thứ vào một tệp mà không có phần mở rộng.
 
-That's all I have for this topic. Thanks for reading! Until next time!
+Đó là tất cả những gì tôi có cho chủ đề này. Cảm ơn vì đã đọc! Cho đến lần sau!
 
 * * * * *
 
@@ -558,3 +558,4 @@ Learning React or Node? Checkout my books:
 
 - [Learn React.js by Building Games](http://amzn.to/2peYJZj)
 - [Node.js Beyond the Basics](http://amzn.to/2FYfYru)
+
