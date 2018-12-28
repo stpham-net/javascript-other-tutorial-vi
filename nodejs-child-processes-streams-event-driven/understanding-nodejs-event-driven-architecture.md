@@ -80,7 +80,7 @@ Node's callback style được sử dụng hoàn toàn ở đây. The callback c
 
 #### JavaScript hiện đại thay thế cho Callbacks (The modern JavaScript alternative to Callbacks)
 
-Trong JavaScript hiện đại, chúng ta có các promise objects. Promises có thể là một giải pháp thay thế cho các callbacks cho các API không đồng bộ. Thay vì chuyển một callback như một đối số và xử lý lỗi ở cùng một vị trí, một promise object cho phép chúng ta xử lý các trường hợp thành công và lỗi riêng biệt và nó cũng cho phép chúng ta xâu chuỗi (chain) nhiều cuộc gọi không đồng bộ thay vì lồng chúng.
+Trong JavaScript hiện đại, chúng ta có các promise objects. Promises có thể là một giải pháp thay thế cho các callbacks cho các API không đồng bộ. Thay vì chuyển một callback như một đối số và xử lý lỗi ở cùng một vị trí, một promise object cho phép chúng ta xử lý các trường hợp thành công và trường hợp lỗi riêng biệt và nó cũng cho phép chúng ta xâu chuỗi (chain) nhiều cuộc gọi không đồng bộ thay vì lồng chúng.
 
 Nếu hàm `readFileAsArray` hỗ trợ các promises, chúng ta có thể sử dụng nó như sau:
 
@@ -119,7 +119,7 @@ Như vậy, chúng ta làm cho hàm trả về một Promise object, nó wraps l
 
 Bất cứ khi nào chúng ta muốn gọi ra (invoke) the callback với một lỗi chúng ta sử dụng promise `reject` function, và bất cứ khi nào chúng ta muốn gọi ra (invoke) the callback với dữ liệu chúng ta sử dụng promise `resolve` function.
 
-Một điều khác duy nhất chúng ta cần làm trong trường hợp này là có một giá trị mặc định cho đối số của callback này trong trường hợp mã đang được sử dụng với promise interface. Chúng ta có thể sử dụng một hàm trống đơn giản, mặc định trong đối số cho trường hợp đó: `() => {}`.
+Một điều khác duy nhất chúng ta cần làm trong trường hợp này là cần có một giá trị mặc định cho đối số của callback này trong trường hợp mã đang được sử dụng với promise interface. Chúng ta có thể sử dụng đơn giản là, default empty function trong đối số cho trường hợp đó: `() => {}`.
 
 #### Consuming promises with async/await
 
@@ -148,9 +148,9 @@ Trước tiên chúng ta tạo một async function, đây chỉ là một norma
 
 Để có được những thứ đó chạy, chúng ta thực hiện async function. Điều này rất đơn giản và dễ đọc hơn. Để làm việc với các lỗi, chúng ta cần phải wrap the async call trong một `try`/`catch` statement.
 
-Với tính năng async/await này, chúng ta không phải sử dụng bất kỳ API đặc biệt nào (như .then và .catch). Chúng tôi chỉ dán nhãn các hàm khác nhau và sử dụng JavaScript thuần cho mã.
+Với tính năng async/await này, chúng ta không phải sử dụng bất kỳ API đặc biệt nào (như .then và .catch). Chúng ta chỉ cần dán nhãn các hàm khác nhau và sử dụng JavaScript thuần cho mã.
 
-Chúng tôi có thể sử dụng tính năng async/await với bất kỳ function nào hỗ trợ một promise interface. Tuy nhiên, chúng ta không thể sử dụng nó với các callback-style async functions (ví dụ như setTimeout).
+Chúng ta có thể sử dụng tính năng async/await với bất kỳ function nào hỗ trợ một promise interface. Tuy nhiên, chúng ta không thể sử dụng nó với các callback-style async functions (ví dụ như setTimeout).
 
 ### The EventEmitter Module
 
@@ -181,7 +181,7 @@ Tại bất kỳ thời điểm nào trong vòng đời của các emitter objec
 myEmitter.emit('something-happened');
 ```
 
-Phát ra (Emitting) một sự kiện là tín hiệu cho thấy một số điều kiện đã xảy ra. Điều kiện này thường là về một sự thay đổi trạng thái trong emitting object.
+Phát ra (Emitting) một sự kiện là tín hiệu cho thấy một số điều kiện đã xảy ra. Điều kiện này thường là về một sự thay đổi trạng thái (state change) trong emitting object.
 
 Chúng ta có thể thêm các listener functions bằng phương thức `on`, và các listener functions này sẽ được thực thi mỗi khi emitter object phát ra sự kiện tên liên quan của chúng (emits their associated name event).
 
@@ -210,7 +210,7 @@ withLog.on('end', () => console.log('Done with execute'));
 withLog.execute(() => console.log('*** Executing task ***'));
 ```
 
-Class `WithLog` là một event emitter. Nó định nghĩa instance function `execute`. `execute` function này nhận một đối số, một task function, và wraps việc thực thi của nó bằng các log statements. Nó bắn các sự kiện trước và sau khi thực hiện.
+Class `WithLog` là một event emitter. Nó định nghĩa instance function `execute`. `execute` function này nhận một đối số, một task function, và wraps việc thực thi của nó bằng các log statements. Nó bắn các sự kiện trước và sau khi thực thi.
 
 Để xem trình tự những gì sẽ xảy ra ở đây, chúng ta đăng ký listeners trên cả hai sự kiện được đặt tên và cuối cùng thực hiện một sample task để kích hoạt (trigger) mọi thứ.
 
@@ -298,7 +298,7 @@ withTime.execute(fs.readFile, __filename);
 
 The `WithTime` class thực thi một `asyncFunc` và báo cáo thời gian mà `asyncFunc` sử dụng bằng cách sử dụng các lệnh `console.time` và `console.timeEnd`. Nó phát ra đúng trình tự các sự kiện trước và sau khi thực hiện. Và cũng phát ra các error/data events để làm việc với các tín hiệu thông thường của các cuộc gọi không đồng bộ.
 
-Chúng ta kiểm tra `withTime` emitter bằng cách chuyển cho nó một lệnh gọi `fs.readFile`, đây là một hàm không đồng bộ. Thay vì xử lý dữ liệu tệp bằng một callback, bây giờ chúng ta có thể lắng nghe sự data event.
+Chúng ta kiểm tra `withTime` emitter bằng cách chuyển cho nó một lệnh gọi `fs.readFile`, đây là một hàm không đồng bộ. Thay vì xử lý dữ liệu tệp bằng một callback, bây giờ chúng ta có thể lắng nghe sự kiện data.
 
 Khi chúng ta thực thi mã này, chúng ta nhận được trình tự sự kiện đúng như mong đợi và chúng ta nhận được thời gian báo cáo cho việc thực thi, điều này rất hữu ích:
 
@@ -437,7 +437,7 @@ Mô đun `EventEmitter` bày ra một phương thức `once`. Phương pháp nà
 
 #### Order of Listeners
 
-Nếu chúng ta đăng ký nhiều listeners cho cùng một sự kiện, việc gọi những listeners đó sẽ theo thứ tự. The first listener mà chúng ta đăng ký là the first listener tiên được gọi.
+Nếu chúng ta đăng ký nhiều listeners cho cùng một sự kiện, việc gọi những listeners đó sẽ theo thứ tự. The first listener mà chúng ta đăng ký là the first listener  được gọi.
 
 ```js
 // प्रथम
