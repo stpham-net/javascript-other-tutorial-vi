@@ -29,11 +29,11 @@ Nhiều built-in modules trong Node thực thi streaming interface:
 
 *Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-Danh sách trên có một số ví dụ cho các đối tượng Node.js gốc cũng có thể đọc và ghi được các streams. Một số đối tượng này là các streams có thể đọc và ghi được, như TCP sockets, zlib and crypto streams.
+Danh sách trên có một số ví dụ cho các đối tượng Node.js gốc cũng có thể readable và writable streams. Một số đối tượng này là có thể cả readable và writable streams, như TCP sockets, zlib and crypto streams.
 
-Lưu ý rằng các đối tượng đó cũng liên quan chặt chẽ. Mặc dù khi HTTP response là readable stream trên client, nó là writable stream trên server. Điều này là do trong trường hợp HTTP, về cơ bản chúng ta đọc từ một đối tượng (`http.IncomingMessage`) và ghi cho the other (`http.ServerResponse`).
+Lưu ý rằng các đối tượng đó cũng liên quan chặt chẽ. Mặc dù một HTTP response là readable stream trên client, nó là writable stream trên server. Điều này là do trong trường hợp HTTP, về cơ bản chúng ta đọc từ một đối tượng (`http.IncomingMessage`) và ghi tới một đối tượng khác (`http.ServerResponse`).
 
-Cũng lưu ý cách `stdio` streams (`stdin`, `stdout`, `stderr`) có các kiểu stream ngược (inverse stream) khi nói đến các child processes. Điều này cho phép một cách thực sự dễ dàng để truyền dữ liệu (pipe) đến và từ các streams này từ các main process `stdio` streams.
+Cũng lưu ý cách `stdio` streams (`stdin`, `stdout`, `stderr`) có các kiểu stream ngược (inverse stream) khi nó đến các child processes. Điều này cho phép một cách thực sự dễ dàng để pipe đến và từ các streams này từ các main process `stdio` streams.
 
 ### Một ví dụ thực tế
 
