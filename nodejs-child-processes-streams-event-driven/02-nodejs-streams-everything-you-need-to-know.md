@@ -8,7 +8,7 @@ Trong những năm qua, các nhà phát triển đã tạo ra rất nhiều gói
 
 ### What exactly are streams?
 
-Streams là tập hợp dữ liệu -- giống như mảng hoặc chuỗi. Sự khác biệt là các streams có thể không có sẵn cùng một lúc và chúng không phải nằm gọn trong bộ nhớ. Điều này làm cho các streams thực sự mạnh mẽ khi làm việc với một lượng lớn dữ liệu hoặc dữ liệu đến từ một nguồn bên ngoài, một *chunk* tại một thời điểm.
+Streams là tập hợp dữ liệu -- giống như mảng hoặc chuỗi. Sự khác biệt là các streams có thể không có sẵn cùng một lúc và chúng không phải nằm gọn trong bộ nhớ. Điều này làm cho các streams thực sự mạnh mẽ khi làm việc với một lượng lớn dữ liệu hoặc dữ liệu đến từ một nguồn bên ngoài một *chunk* tại một thời điểm (coming from an external source one chunk at a time).
 
 Tuy nhiên, các streams không chỉ là về làm việc với dữ liệu lớn. Chúng cũng cung cấp cho chúng ta sức mạnh của khả năng kết hợp trong mã của chúng ta. Giống như chúng ta có thể soạn các lệnh Linux mạnh mẽ bằng cách kết hợp các lệnh Linux nhỏ hơn khác, chúng ta có thể thực hiện chính xác như vậy trong Node với các streams.
 
