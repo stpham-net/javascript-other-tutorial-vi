@@ -37,7 +37,7 @@ Cũng lưu ý cách `stdio` streams (`stdin`, `stdout`, `stderr`) có các kiể
 
 ### Một ví dụ thực tế
 
-Lý thuyết là tuyệt vời, nhưng thường không thuyết phục 100%. Chúng ta hãy xem một ví dụ minh họa các streams khác biệt có thể tạo ra mã khi nói đến mức tiêu thụ bộ nhớ.
+Lý thuyết là tuyệt vời, nhưng thường không thuyết phục 100%. Chúng ta hãy xem một ví dụ minh họa các streams tạo ra sự khác biệt trong code khi nói đến mức tiêu thụ bộ nhớ.
 
 Trước tiên hãy tạo một tệp lớn:
 
@@ -54,11 +54,11 @@ file.end();
 
 Hãy nhìn những gì tôi đã sử dụng để tạo tập tin lớn đó. Một writable stream!
 
-Mô đun `fs` có thể được sử dụng để đọc và ghi vào các tệp sử dụng stream interface. Trong ví dụ trên, chúng tôi đang viết cho `big.file` thông qua writable stream 1 triệu dòng bằng một vòng lặp.
+Mô đun `fs` có thể được sử dụng để đọc và ghi vào các tệp sử dụng stream interface. Trong ví dụ trên, chúng ta đang ghi 1 triệu dòng tới `big.file` thông qua writable stream bằng một vòng lặp.
 
 Chạy đoạn script trên tạo ra một tệp khoảng ~400 MB.
 
-Đây là một simple Node web server được thiết kế để phục vụ riêng cho `big.file`:
+Đây là một simple Node web server được thiết kế để xử lý riêng cho `big.file`:
 
 ```js
 const fs = require('fs');
@@ -75,7 +75,7 @@ server.on('request', (req, res) => {
 server.listen(8000);
 ```
 
-Khi máy chủ nhận được yêu cầu, nó sẽ xử lý the big file bằng phương thức không đồng bộ, `fs.readFile`. Nhưng này, không giống như chúng ta chặn vòng lặp sự kiện hay bất cứ điều gì. Mọi thứ đều tuyệt vời, phải không? Đúng?
+Khi máy chủ nhận được một request, nó sẽ xử lý the big file bằng phương thức không đồng bộ, `fs.readFile`. Nhưng này, không giống như chúng ta chặn vòng lặp sự kiện hay bất cứ điều gì. Mọi thứ đều tuyệt vời, phải không? Đúng?
 
 Chà, hãy xem điều gì xảy ra khi chúng ta chạy máy chủ, kết nối với nó và theo dõi bộ nhớ trong khi làm như vậy.
 
@@ -93,7 +93,7 @@ Về cơ bản chúng ta đưa toàn bộ nội dung `big.file` vào bộ nhớ 
 
 The HTTP response object (`res` trong đoạn mã trên) cũng là một writable stream. Điều này có nghĩa là nếu chúng ta có một readable stream đại diện cho nội dung của `big.file`, chúng ta có thể kết nối hai thứ đó với nhau và đạt được kết quả tương tự mà không tốn ~400 MB bộ nhớ.
 
-Node's `fs` module có thể cung cấp cho chúng ta một readable stream cho bất kỳ tệp nào bằng cách sử dụng phương thức `createReadStream`. Chúng ta có thể truyền dữ liệu (pipe) đó đến response object:
+Node's `fs` module có thể cung cấp cho chúng ta một readable stream cho bất kỳ tệp nào bằng cách sử dụng phương thức `createReadStream`. Chúng ta có thể pipe dữ liệu đó đến response object:
 
 ```js
 const fs = require('fs');
@@ -113,11 +113,11 @@ Bây giờ khi bạn kết nối với máy chủ này, một điều kỳ diệ
 
 *Chuyện gì đang xảy ra?*
 
-Khi một khách hàng yêu cầu tệp lớn đó, chúng ta sẽ stream nó từng đoạn một (one chunk at a time), điều đó có nghĩa là chúng ta không buffer nó trong bộ nhớ. Việc sử dụng bộ nhớ tăng khoảng 25 MB và đó là nó.
+Khi một client yêu cầu big file đó, chúng ta sẽ stream nó từng đoạn một (one chunk at a time), điều đó có nghĩa là chúng ta không buffer nó trong bộ nhớ. Việc sử dụng bộ nhớ tăng khoảng 25 MB và đó là nó.
 
 Bạn có thể đẩy ví dụ này đến giới hạn của nó. Tạo lại `big.file` với năm triệu dòng thay vì chỉ một triệu, sẽ đưa tệp lên hơn 2 GB và thực sự lớn hơn giới hạn bộ đệm (buffer limit) mặc định trong Node.
 
-Nếu bạn cố gắng xử lý tệp đó bằng cách sử dụng `fs.readFile`, bạn đơn giản là không thể theo mặc định (bạn có thể thay đổi the limits). Nhưng với `fs.createReadStream`, không có vấn đề gì trong việc truyền 2 GB dữ liệu đến người yêu cầu, và tốt nhất, việc process sử dụng bộ nhớ sẽ gần như giống nhau.
+Nếu bạn cố gắng xử lý tệp đó bằng cách sử dụng `fs.readFile`, bạn đơn giản là không thể theo mặc định (bạn có thể thay đổi the limits). Nhưng với `fs.createReadStream`, không có vấn đề gì trong việc truyền 2 GB dữ liệu đến requester, và tốt hơn cả, là việc process sử dụng bộ nhớ sẽ gần như tương tự nhau.
 
 Sẵn sàng để học stream bây giờ?
 
