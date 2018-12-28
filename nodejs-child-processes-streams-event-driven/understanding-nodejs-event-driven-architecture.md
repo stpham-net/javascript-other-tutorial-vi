@@ -74,9 +74,9 @@ readFileAsArray('./numbers.txt', (err, lines) => {
 });
 ```
 
-Mã này đọc nội dung số thành một chuỗi các chuỗi, phân tích chúng dưới dạng số và đếm các số lẻ.
+Mã này đọc nội dung số thành một mảng các strings, phân tích chúng dưới dạng số và đếm các số lẻ.
 
-Node's callback style được sử dụng hoàn toàn ở đây. The callback có một đối số đầu tiên là lỗi `err` vô giá trị (that's nullable) và chúng ta chuyển callback làm đối số cuối cùng cho host function. Bạn nên luôn luôn làm điều đó trong các functions của bạn bởi vì người dùng có thể sẽ cho rằng. Làm cho host function nhận được the callback làm đối số cuối cùng của nó và làm cho the callback mong đợi một error object là đối số đầu tiên của nó.
+Node's callback style được sử dụng hoàn toàn ở đây. The callback có một đối số đầu tiên là lỗi `err` vô giá trị (that's nullable) và tiếp theo chúng ta chuyển callback như là đối số cuối cùng cho host function. Bạn nên luôn luôn làm điều đó trong các functions của bạn bởi vì mọi người có thể sẽ cho rằng như thế. Làm cho host function nhận được the callback như là đối số cuối cùng của nó và làm cho the callback mong đợi một error object như là đối số đầu tiên của nó.
 
 #### JavaScript hiện đại thay thế cho Callbacks (The modern JavaScript alternative to Callbacks)
 
