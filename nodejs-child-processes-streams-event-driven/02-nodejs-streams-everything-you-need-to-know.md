@@ -281,7 +281,7 @@ Trong `outStream`, chúng ta chỉ đơn giản là `console.log` chunk dưới 
 
 Khi chúng ta chạy mã ở trên, bất cứ điều gì chúng ta nhập vào `process.stdin` sẽ được echoed back bằng cách sử dụng dòng `outStream` `console.log`.
 
-Đây không phải là một very useful stream để thực thi bởi vì nó thực sự đã được triển khai và tích hợp sẵn. Điều này rất giống với `process.stdout`. Chúng ta chỉ cần chuyển `stdin` thành `stdout` và chúng ta sẽ có được tính năng echo giống hệt với dòng đơn này:
+Đây không phải là một very useful stream để thực thi bởi vì nó thực sự đã được triển khai và tích hợp sẵn. Điều này rất giống với `process.stdout`. Chúng ta chỉ cần chuyển `stdin` tới `stdout` và chúng ta sẽ có được tính năng echo giống hệt với dòng đơn này:
 
 ```js
 process.stdin.pipe(process.stdout);
