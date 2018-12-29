@@ -1,179 +1,177 @@
-Node.js Child Processes: Everything you need to know
-====================================================
+# Node.js Child Processes: Everything you need to know
 
-How to use spawn(), exec(), execFile(), and fork()
---------------------------------------------------
+## How to use spawn(), exec(), execFile(), and fork()
 
 ![](https://cdn-images-1.medium.com/max/2000/1*I56pPhzO1VQw8SIsv8wYNA.png)
 
-*Screenshot captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-Single-threaded, non-blocking performance in Node.js works great for a single process. But eventually, one process in one CPU is not going to be enough to handle the increasing workload of your application.
+Đơn luồng (single-threaded), không chặn (non-blocking) thực hiện trong Node.js hoạt động tuyệt vời cho một process (single process). Nhưng cuối cùng, một process trong một CPU sẽ không đủ để xử lý khối lượng công việc ngày càng tăng của ứng dụng của bạn.
 
-No matter how powerful your server may be, a single thread can only support a limited load.
+Cho dù máy chủ của bạn có mạnh đến đâu, một luồng chỉ có thể hỗ trợ tải hạn chế (limited load).
 
-The fact that Node.js runs in a single thread does not mean that we can't take advantage of multiple processes and, of course, multiple machines as well.
+Việc Node.js chạy trong một luồng không có nghĩa là chúng ta không thể tận dụng multiple processes và tất nhiên, multiple machines cũng vậy.
 
-Using multiple processes is the best way to scale a Node application. Node.js is designed for building distributed applications with many nodes. This is why it's named *Node*. Scalability is baked into the platform and it's not something you start thinking about later in the lifetime of an application.
+Sử dụng multiple processes là cách tốt nhất để mở rộng (scale) ứng dụng Node. Node.js được thiết kế để xây dựng các ứng dụng phân tán (distributed applications) với nhiều nút (nodes). Đây là lý do tại sao nó có tên *Nút (Node)*. Khả năng mở rộng được đưa vào nền tảng và đó không phải là điều bạn bắt đầu nghĩ đến sau này trong vòng đời của một ứng dụng.
 
-> This article is a write-up of part of [my Pluralsight course about Node.js](https://www.pluralsight.com/courses/nodejs-advanced). I cover similar content in video format there.
+> Bài viết này là một phần của [khóa học Pluralsight của tôi về Node.js](https://www.pluralsight.com/cifts/nodejs-advified). Tôi bao gồm nội dung tương tự ở định dạng video ở đó.
 
-Please note that you'll need a good understanding of Node.js *events* and *streams* before you read this article. If you haven't already, I recommend that you read these two other articles before you read this one:
+Xin lưu ý rằng bạn sẽ cần hiểu rõ về các Node.js *events* và *streams* trước khi bạn đọc bài viết này. Nếu bạn chưa biết, tôi khuyên bạn nên đọc hai bài viết này trước khi bạn đọc bài viết này:
 
-[Understanding Node.js Event-Driven Architecture](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d "https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d")[](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d)
+[Tìm hiểu kiến trúc hướng sự kiện của Node.js](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d)
 
-[Node.js Streams: Everything you need to know](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93 "https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93")[](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93)
+[Node.js Streams: Mọi thứ bạn cần biết](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93)
 
 ### The Child Processes Module
 
-We can easily spin a child process using Node's `child_process` module and those child processes can easily communicate with each other with a messaging system.
+Chúng ta có thể dễ dàng quay (spin) một child process bằng cách sử dụng mô đun `child_ process` của Node và các child processes đó có thể dễ dàng giao tiếp với nhau bằng một hệ thống nhắn tin (messaging system).
 
-The `child_process` module enables us to access Operating System functionalities by running any system command inside a, well, child process.
+Mô-đun `child_ process` cho phép chúng ta truy cập các chức năng của Hệ điều hành (Operating System functionalities) bằng cách chạy bất kỳ lệnh hệ thống (system command) nào bên trong một child process, well.
 
-We can control that child process input stream, and listen to its output stream. We can also control the arguments to be passed to the underlying OS command, and we can do whatever we want with that command's output. We can, for example, pipe the output of one command as the input to another (just like we do in Linux) as all inputs and outputs of these commands can be presented to us using [Node.js streams](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93).
+Chúng ta có thể kiểm soát (control) luồng đầu vào (input stream) của child process đó và listen luồng đầu ra (output stream) của nó. Chúng ta cũng có thể kiểm soát các đối số được truyền bên dưới OS command và chúng ta có thể làm bất cứ điều gì chúng ta muốn với đầu ra của lệnh đó. Ví dụ, chúng ta có thể đặt đầu ra của một lệnh làm đầu vào cho một lệnh khác (giống như chúng ta làm trong Linux) vì tất cả các đầu vào và đầu ra của các lệnh này có thể được trình bày cho chúng ta bằng cách sử dụng [Node.js streams](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93).
 
-*Note that examples I'll be using in this article are all Linux-based. On Windows, you need to switch the commands I use with their Windows alternatives.*
+* Lưu ý rằng các ví dụ tôi sẽ sử dụng trong bài viết này đều dựa trên Linux. Trên Windows, bạn cần chuyển đổi các lệnh tôi sử dụng với các lựa chọn thay thế dành cho Windows.*
 
-There are four different ways to create a child process in Node: `spawn()`, `fork()`, `exec()`, and `execFile()`.
+Có bốn cách khác nhau để tạo một child process trong Node: `spawn()`, `fork()`, `exec()`, and `execFile()`.
 
-We're going to see the differences between these four functions and when to use each.
+Chúng ta sẽ thấy sự khác biệt giữa bốn chức năng này và khi nào nên sử dụng mỗi chức năng.
 
 #### Spawned Child Processes
 
-The `spawn` function launches a command in a new process and we can use it to pass that command any arguments. For example, here's code to spawn a new process that will execute the `pwd` command.
+Hàm `spawn` khởi chạy một command trong một process mới và chúng ta có thể sử dụng nó để truyền cho command đó bất kỳ đối số nào. Ví dụ, đây là mã để sinh ra một process mới sẽ thực thi lệnh `pwd`.
 
 ```js
-      const { spawn } = require('child_process');
-      
-      const child = spawn('pwd');
+const { spawn } = require('child_process');
+
+const child = spawn('pwd');
 ```
 
-We simply destructure the `spawn` function out of the `child_process` module and execute it with the OS command as the first argument.
+Chúng ta chỉ cần destructure the `spawn` function ra khỏi `child_process` module và thực thi nó với OS command làm đối số đầu tiên.
 
-The result of executing the `spawn` function (the `child` object above) is a `ChildProcess` instance, which implements the [EventEmitter API](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d). This means we can register handlers for events on this child object directly. For example, we can do something when the child process exits by registering a handler for the `exit` event:
+Kết quả của việc thực thi hàm `spawn` (đối tượng `child` ở trên) là một phiên bản `ChildProcess`, thực hiện [EventEmitter API](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d). Điều này có nghĩa là chúng ta có thể đăng ký handlers cho các events trên child object này trực tiếp. Ví dụ, chúng ta có thể làm gì đó khi child process thoát ra bằng cách đăng ký một handler cho `exit` event:
 
 ```js
-      child.on('exit', function (code, signal) {
-        console.log('child process exited with ' +
-                    `code ${code} and signal ${signal}`);
-      });
+child.on('exit', function (code, signal) {
+  console.log('child process exited with ' +
+              `code ${code} and signal ${signal}`);
+});
 ```
 
-The handler above gives us the exit `code` for the child process and the `signal`, if any, that was used to terminate the child process. This `signal`variable is null when the child process exits normally.
+The handler ở trên cung cấp cho chúng ta exit `code` cho the child process và `signal`, nếu có, được sử dụng để chấm dứt the child process. `signal` variable này là null khi the child process exits bình thường.
 
-The other events that we can register handlers for with the `ChildProcess`instances are `disconnect`, `error`, `close`, and `message`.
+Các events khác mà chúng ta có thể đăng ký handlers với the `ChildProcess` instances là `disconnect`, `error`, `close`, và `message`.
 
--   The `disconnect` event is emitted when the parent process manually calls the `child.disconnect` function.
--   The `error` event is emitted if the process could not be spawned or killed.
--   The `close` event is emitted when the `stdio` streams of a child process get closed.
--   The `message` event is the most important one. It's emitted when the child process uses the `process.send()` function to send messages. This is how parent/child processes can communicate with each other. We'll see an example of this below.
+- The `disconnect` event được emitted khi parent process gọi thủ công `child.disconnect` function.
+- The `error` event được emitted nếu the process không thể spawned hoặc killed.
+- The `close` event được emitted khi các `stdio` streams của một child process bị đóng lại.
+- The `message` event là quan trọng nhất. Nó được emitted khi the child process sử dụng hàm `process.send()` để gửi messages. Đây là cách các parent/child processes có thể giao tiếp với nhau. Chúng ta sẽ thấy một ví dụ về điều này dưới đây.
 
-Every child process also gets the three standard `stdio` streams, which we can access using `child.stdin`, `child.stdout`, and `child.stderr`.
+Mọi child process cũng nhận được ba `stdio` streams tiêu chuẩn, mà chúng ta có thể truy cập bằng cách sử dụng `child.stdin`, `child.stdout`, và `child.stderr`.
 
-When those streams get closed, the child process that was using them will emit the `close` event. This `close` event is different than the `exit` event because multiple child processes might share the same `stdio` streams and so one child process exiting does not mean that the streams got closed.
+Khi các streams đó bị đóng, the child process đang sử dụng chúng sẽ phát ra `close` event. `close` event này khác với the `exit` event vì nhiều child processes có thể chia sẻ cùng một `stdio` streams và vì vậy một child process thoát ra không có nghĩa là các streams đã bị đóng.
 
-Since all streams are event emitters, we can listen to different events on those `stdio` streams that are attached to every child process. Unlike in a normal process though, in a child process, the `stdout`/`stderr` streams are readable streams while the `stdin` stream is a writable one. This is basically the inverse of those types as found in a main process. The events we can use for those streams are the standard ones. Most importantly, on the readable streams, we can listen to the `data` event, which will have the output of the command or any error encountered while executing the command:
+Vì tất cả các streams là các event emitters, chúng ta có thể listen các events khác nhau trên các `stdio` streams được gắn vào mọi child process. Không giống như trong một process thông thường, trong một child process, các `stdout`/`stderr` streams là các readable streams trong khi `stdin` stream là một writable stream. Điều này về cơ bản là ngược lại với các kiểu được tìm thấy trong một main process. Các events chúng ta có thể sử dụng cho các streams đó là các events tiêu chuẩn. Quan trọng nhất, trên các readable streams, chúng ta có thể listen to the `data` event, mà sẽ có đầu ra của command hoặc bất kỳ error nào gặp phải khi thực thi command:
 
 ```js
-      child.stdout.on('data', (data) => {
-        console.log(`child stdout:\n${data}`);
-      });
-      
-      child.stderr.on('data', (data) => {
-        console.error(`child stderr:\n${data}`);
-      });
+child.stdout.on('data', (data) => {
+  console.log(`child stdout:\n${data}`);
+});
+
+child.stderr.on('data', (data) => {
+  console.error(`child stderr:\n${data}`);
+});
 ```
 
-The two handlers above will log both cases to the main process `stdout` and `stderr`. When we execute the `spawn` function above, the output of the `pwd`command gets printed and the child process exits with code `0`, which means no error occurred.
+Hai handlers ở trên sẽ log cả hai trường hợp vào the main process `stdout` và `stderr`. Khi chúng ta thực thi hàm `spawn` ở trên, đầu ra của `pwd` command sẽ được in (printed) và the child process thoát ra (exits) với mã `0`, có nghĩa là không có lỗi xảy ra.
 
-We can pass arguments to the command that's executed by the `spawn`function using the second argument of the `spawn` function, which is an array of all the arguments to be passed to the command. For example, to execute the `find` command on the current directory with a `-type f` argument (to list files only), we can do:
+Chúng ta có thể truyền các đối số cho command được thực thi bởi hàm `spawn` bằng cách sử dụng đối số thứ hai của hàm `spawn`, là một mảng của tất cả các đối số được truyền cho the command. Ví dụ, để thực thi lệnh `find` trên thư mục hiện tại với một đối số `-type f` (chỉ liệt kê các tệp), chúng ta có thể làm:
 
 ```js
-      const child = spawn('find', ['.', '-type', 'f']);
+const child = spawn('find', ['.', '-type', 'f']);
 ```
 
-If an error occurs during the execution of the command, for example, if we give find an invalid destination above, the `child.stderr` `data` event handler will be triggered and the `exit` event handler will report an exit code of `1`, which signifies that an error has occurred. The error values actually depend on the host OS and the type of error.
+Nếu xảy ra lỗi trong quá trình thực thi the command, ví dụ, nếu chúng ta tìm thấy đích không hợp lệ ở trên, the `child.stderr` `data` event handler sẽ được kích hoạt và the `exit` event handler sẽ báo cáo một exit code of `1`, điều đó biểu thị rằng đã xảy ra lỗi. Các giá trị lỗi thực sự phụ thuộc vào host OS và kiểu của lỗi.
 
-A child process `stdin` is a writable stream. We can use it to send a command some input. Just like any writable stream, the easiest way to consume it is using the `pipe` function. We simply pipe a readable stream into a writable stream. Since the main process `stdin` is a readable stream, we can pipe that into a child process `stdin` stream. For example:
+A child process `stdin` là một writable stream. Chúng ta có thể sử dụng nó để send a command some input. Giống như bất kỳ writable stream nào, cách dễ nhất để sử dụng nó là sử dụng `pipe` function. Chúng ta chỉ đơn giản pipe một readable stream tới một writable stream. Vì the main process `stdin` là một readable stream, nên chúng ta có thể pipe luồng đó thành một child process `stdin` stream. Ví dụ:
 
 ```js
-      const { spawn } = require('child_process');
-      
-      const child = spawn('wc');
-      
-      process.stdin.pipe(child.stdin)
-      
-      child.stdout.on('data', (data) => {
-        console.log(`child stdout:\n${data}`);
-      });
+const { spawn } = require('child_process');
+
+const child = spawn('wc');
+
+process.stdin.pipe(child.stdin)
+
+child.stdout.on('data', (data) => {
+  console.log(`child stdout:\n${data}`);
+});
 ```
 
-In the example above, the child process invokes the `wc` command, which counts lines, words, and characters in Linux. We then pipe the main process `stdin` (which is a readable stream) into the child process `stdin` (which is a writable stream). The result of this combination is that we get a standard input mode where we can type something and when we hit `Ctrl+D`, what we typed will be used as the input of the `wc` command.
+Trong ví dụ trên, the child process gọi ra (invokes) the `wc` command, đếm các dòng, từ và ký tự trong Linux. Sau đó, chúng ta pipe the main process `stdin` (mà là một readable stream) tới child process `stdin` (mà là một writable stream). Kết quả của sự kết hợp này là chúng ta có được một chế độ đầu vào tiêu chuẩn nơi chúng ta có thể nhập một cái gì đó và khi chúng ta nhấn `Ctrl+D`, những gì chúng ta đã nhập sẽ được sử dụng làm đầu vào của `wc` command.
 
 ![](https://cdn-images-1.medium.com/max/1000/1*s9dQY9GdgkkIf9zC1BL6Bg.gif)
 
-*Gif captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-We can also pipe the standard input/output of multiple processes on each other, just like we can do with Linux commands. For example, we can pipe the `stdout` of the `find` command to the stdin of the `wc` command to count all the files in the current directory:
-
-```js
-      const { spawn } = require('child_process');
-      
-      const find = spawn('find', ['.', '-type', 'f']);
-      const wc = spawn('wc', ['-l']);
-      
-      find.stdout.pipe(wc.stdin);
-      
-      wc.stdout.on('data', (data) => {
-        console.log(`Number of files ${data}`);
-      });
-```
-
-I added the `-l` argument to the `wc` command to make it count only the lines. When executed, the code above will output a count of all files in all directories under the current one.
-
-#### Shell Syntax and the exec function
-
-By default, the `spawn` function does not create a *shell* to execute the command we pass into it. This makes it slightly more efficient than the `exec` function, which does create a shell. The `exec` function has one other major difference. It *buffers* the command's generated output and passes the whole output value to a callback function (instead of using streams, which is what `spawn` does).
-
-Here's the previous `find | wc` example implemented with an `exec` function.
+Chúng ta cũng có thể pipe the standard input/output of multiple processes lên nhau, giống như chúng ta có thể làm với các lệnh Linux. Ví dụ, chúng ta có thể pipe the `stdout` của `find` command tới the stdin of the `wc` command để đếm tất cả các tệp trong thư mục hiện tại:
 
 ```js
-      const { exec } = require('child_process');
-      
-      exec('find . -type f | wc -l', (err, stdout, stderr) => {
-        if (err) {
-          console.error(`exec error: ${err}`);
-          return;
-        }
-      
-        console.log(`Number of files ${stdout}`);
-      });
+const { spawn } = require('child_process');
+
+const find = spawn('find', ['.', '-type', 'f']);
+const wc = spawn('wc', ['-l']);
+
+find.stdout.pipe(wc.stdin);
+
+wc.stdout.on('data', (data) => {
+  console.log(`Number of files ${data}`);
+});
 ```
 
-Since the `exec` function uses a shell to execute the command, we can use the *shell syntax* directly here making use of the shell *pipe* feature.
+Tôi đã thêm đối số `-l` vào `wc` command để làm cho nó chỉ đếm các dòng (count only the lines). Khi được thực thi, đoạn mã trên sẽ xuất ra một count của tất cả các tệp trong tất cả các thư mục dưới (under) tệp hiện tại.
 
-Note that using the shell syntax comes at a [security risk](https://blog.liftsecurity.io/2014/08/19/Avoid-Command-Injection-Node.js/) if you're executing any kind of dynamic input provided externally. A user can simply do a command injection attack using shell syntax characters like ; and $ (for example, `command + '; rm -rf ~'`)
+#### Shell Syntax and the exec function
 
-The `exec` function buffers the output and passes it to the callback function (the second argument to `exec`) as the `stdout` argument there. This `stdout` argument is the command's output that we want to print out.
+Theo mặc định, hàm `spawn` không tạo một *shell* để thực thi lệnh chúng ta truyền vào nó. Điều này làm cho nó hiệu quả hơn một chút so với hàm `exec`, nó tạo ra một shell. Hàm `exec` có một sự khác biệt lớn khác. Nó *đệm (buffers)* đầu ra được tạo của lệnh và passes toàn bộ giá trị đầu ra tới một callback function (thay vì sử dụng các streams, đó là những gì `spawn` làm).
 
-The `exec` function is a good choice if you need to use the shell syntax and if the size of the data expected from the command is small. (Remember, `exec` will buffer the whole data in memory before returning it.)
-
-The `spawn` function is a much better choice when the size of the data expected from the command is large, because that data will be streamed with the standard IO objects.
-
-We can make the spawned child process inherit the standard IO objects of its parents if we want to, but also, more importantly, we can make the `spawn` function use the shell syntax as well. Here's the same `find | wc` command implemented with the `spawn` function:
+Đây là ví dụ `find | wc` được triển khai với hàm `exec`.
 
 ```js
-      const child = spawn('find . -type f | wc -l', {
-        stdio: 'inherit',
-        shell: true
-      });
+const { exec } = require('child_process');
+
+exec('find . -type f | wc -l', (err, stdout, stderr) => {
+  if (err) {
+    console.error(`exec error: ${err}`);
+    return;
+  }
+
+  console.log(`Number of files ${stdout}`);
+});
 ```
 
-Because of the `stdio: 'inherit'` option above, when we execute the code, the child process inherits the main process `stdin`, `stdout`, and `stderr`. This causes the child process data events handlers to be triggered on the main `process.stdout` stream, making the script output the result right away.
+Vì hàm `exec` sử dụng shell để thực thi lệnh (command), nên chúng ta có thể sử dụng *shell syntax* trực tiếp tại đây bằng cách sử dụng tính năng shell *pipe*.
 
-Because of the `shell: true` option above, we were able to use the shell syntax in the passed command, just like we did with `exec`. But with this code, we still get the advantage of the streaming of data that the `spawn` function gives us. *This is really the best of both worlds.*
+Lưu ý rằng việc sử dụng shell syntax có [rủi ro bảo mật](https://blog.liftsecurity.io/2014/08/19/Avoid-Command-Injection-Node.js/) nếu bạn đang thực hiện bất kỳ loại dynamic input nào được cung cấp từ bên ngoài. Người dùng có thể chỉ cần thực hiện một command injection attack bằng cách sử dụng các shell syntax characters như `;` và `$` (ví dụ: `command + '; rm -rf ~'`)
 
-There are a few other good options we can use in the last argument to the `child_process` functions besides `shell` and `stdio`. We can, for example, use the `cwd` option to change the working directory of the script. For example, here's the same count-all-files example done with a `spawn` function using a shell and with a working directory set to my Downloads folder. The `cwd` option here will make the script count all files I have in `~/Downloads`:
+Hàm `exec` buffers the output và chuyển nó đến callback function (đối số thứ hai cho `exec`) như là đối số `stdout` ở đó. Đối số `stdout` này là đầu ra của lệnh mà chúng ta muốn in ra.
+
+Hàm `exec` là một lựa chọn tốt nếu bạn cần sử dụng shell syntax và nếu kích thước của dữ liệu dự kiến từ lệnh là nhỏ. (Hãy nhớ, `exec` sẽ đệm (buffer) toàn bộ dữ liệu trong bộ nhớ trước khi trả lại.)
+
+Hàm `spawn` là một lựa chọn tốt hơn nhiều khi kích thước của dữ liệu được mong đợi từ lệnh lớn, bởi vì dữ liệu đó sẽ được streamed với các standard IO objects.
+
+Chúng ta có thể làm cho the spawned child process kế thừa các the standard IO objects của parents nếu chúng ta muốn, nhưng, quan trọng hơn, chúng ta cũng có thể làm cho hàm `spawn` sử dụng shell syntax. Đây là cùng một `find | wc` command được triển khai với hàm `spawn`:
+
+```js
+const child = spawn('find . -type f | wc -l', {
+  stdio: 'inherit',
+  shell: true
+});
+```
+
+Do tùy chọn `stdio: 'inherit'` ở trên, khi chúng ta thực thi mã, the child process kế thừa main process `stdin`, `stdout`, và `stderr`. Điều này làm cho các the child process data events handlers được kích hoạt trên main `process.stdout` stream, làm cho script xuất kết quả ngay lập tức.
+
+Do tùy chọn `shell: true` ở trên, chúng ta có thể sử dụng the shell syntax trong lệnh đã truyền (passed command), giống như chúng ta đã làm với `exec`. Nhưng với mã này, chúng ta vẫn có được lợi thế của việc streaming of data mà hàm `spawn` mang lại cho chúng ta. *Đây thực sự là tốt nhất của cả hai thế giới.*
+
+Có một vài tùy chọn tốt khác mà chúng ta có thể sử dụng trong đối số cuối cùng cho các the `child_process` functions bên cạnh `shell` và `stdio`. Ví dụ, chúng ta có thể sử dụng tùy chọn `cwd` để thay đổi thư mục làm việc của script. Ví dụ, đây là ví dụ the same count-all-files example được thực hiện với hàm `spawn` sử dụng một shell và với một thư mục làm việc được đặt tới my Downloads folder. Tùy chọn `cwd` ở đây sẽ làm cho script đếm tất cả các tệp tôi có trong `~/Downloads`:
 
 ```js
 const child = spawn('find . -type f | wc -l', {
@@ -183,199 +181,201 @@ const child = spawn('find . -type f | wc -l', {
 });
 ```
 
-Another option we can use is the `env` option to specify the environment variables that will be visible to the new child process. The default for this option is `process.env` which gives any command access to the current process environment. If we want to override that behavior, we can simply pass an empty object as the `env` option or new values there to be considered as the only environment variables:
+Một tùy chọn khác mà chúng ta có thể sử dụng là tùy chọn `env` để chỉ định các environment variables sẽ hiển thị cho the new child process. Mặc định cho tùy chọn này là `process.env`, cho phép mọi lệnh truy cập vào process environment hiện tại. Nếu chúng ta muốn ghi đè hành vi đó, chúng ta có thể chuyển một đối tượng trống dưới dạng tùy chọn `env` hoặc các giá trị mới ở đó để được coi là environment variables duy nhất:
 
 ```js
-      const child = spawn('echo $ANSWER', {
-        stdio: 'inherit',
-        shell: true,
-       env: { ANSWER: 42 },
-       });
+const child = spawn('echo $ANSWER', {
+  stdio: 'inherit',
+  shell: true,
+ env: { ANSWER: 42 },
+ });
 ```
 
-The echo command above does not have access to the parent process's environment variables. It can't, for example, access `$HOME`, but it can access `$ANSWER` because it was passed as a custom environment variable through the `env` option.
+Lệnh echo ở trên không có quyền truy cập vào các parent process's environment variables. Ví dụ, nó không thể truy cập `$HOME`, nhưng nó có thể truy cập `$ANSWER` vì nó được passed như là một custom environment variable thông qua tùy chọn `env`.
 
-One last important child process option to explain here is the `detached` option, which makes the child process run independently of its parent process.
+Một tùy chọn child process quan trọng cuối cùng cần giải thích ở đây là tùy chọn `detached`, làm cho the child process chạy độc lập với parent process của nó.
 
-Assuming we have a file `timer.js` that keeps the event loop busy:
+Giả sử chúng ta có một tệp `timer.js` giữ cho event loop bận rộn:
 
 ```js
-      setTimeout(() => {
-        // keep the event loop busy
-      }, 20000);
+setTimeout(() => {
+  // keep the event loop busy
+}, 20000);
 ```
 
-We can execute it in the background using the `detached` option:
+Chúng ta có thể thực thi nó trong background bằng cách sử dụng tùy chọn `detached`:
 
 ```js
-      const { spawn } = require('child_process');
-      
-      const child = spawn('node', ['timer.js'], {
-       detached: true,
-        stdio: 'ignore'
-      });
-      
-      child.unref();
+const { spawn } = require('child_process');
+
+const child = spawn('node', ['timer.js'], {
+ detached: true,
+  stdio: 'ignore'
+});
+
+child.unref();
 ```
 
-The exact behavior of detached child processes depends on the OS. On Windows, the detached child process will have its own console window while on Linux the detached child process will be made the leader of a new process group and session.
+Hành vi chính xác của các detached child processes phụ thuộc vào OS. Trên Windows, the detached child process sẽ có console window riêng trong khi trên Linux, the detached child process sẽ được đưa lên làm thủ lĩnh (leader) của một new process group và session.
 
-If the `unref` function is called on the detached process, the parent process can exit independently of the child. This can be useful if the child is executing a long-running process, but to keep it running in the background the child's `stdio` configurations also have to be independent of the parent.
+Nếu hàm `unref` được gọi trên the detached process, the parent process có thể exit độc lập với the child. Điều này có thể hữu ích nếu the child đang thực hiện một long-running process, nhưng để giữ cho nó chạy trong background, các cấu hình `stdio` của the child cũng phải độc lập với the parent.
 
-The example above will run a node script (`timer.js`) in the background by detaching and also ignoring its parent `stdio` file descriptors so that the parent can terminate while the child keeps running in the background.
+Ví dụ trên sẽ chạy node script (`timer.js`) trong background bằng cách tách ra và cũng bỏ qua its parent `stdio` file descriptors để the parent có thể chấm dứt (terminate) trong khi the child tiếp tục chạy trong background.
 
 ![](https://cdn-images-1.medium.com/max/1000/1*WhvMs8zv-WS6v7nDXmDUzw.gif)
 
-*Gif captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-#### The execFile function
+#### The execFile function
 
-If you need to execute a file without using a shell, the `execFile` function is what you need. It behaves exactly like the `exec` function, but does not use a shell, which makes it a bit more efficient. On Windows, some files cannot be executed on their own, like `.bat` or `.cmd` files. Those files cannot be executed with `execFile` and either `exec` or `spawn` with shell set to true is required to execute them.
+Nếu bạn cần thực thi một tệp mà không sử dụng một shell, hàm `execFile` là thứ bạn cần. Nó hoạt động chính xác như hàm `exec`, nhưng không sử dụng một shell, điều này làm cho nó hiệu quả hơn một chút. Trên Windows, một số tệp không thể tự thực thi, như các tệp `.bat` hoặc `.cmd`. Các tệp đó không thể thực thi bằng `execFile` và `exec` hoặc `spawn` với shell được đặt thành true là bắt buộc để thực thi chúng.
 
-#### The *Sync function
+#### The *Sync function
 
-The functions `spawn`, `exec`, and `execFile` from the `child_process` module also have synchronous blocking versions that will wait until the child process exits.
-
-```js
-      const {
-        spawnSync,
-        execSync,
-        execFileSync,
-      } = require('child_process');
-```
-
-Those synchronous versions are potentially useful when trying to simplify scripting tasks or any startup processing tasks, but they should be avoided otherwise.
-
-#### The fork() function
-
-The `fork` function is a variation of the `spawn` function for spawning node processes. The biggest difference between `spawn` and `fork` is that a communication channel is established to the child process when using `fork`, so we can use the `send` function on the forked process along with the global `process` object itself to exchange messages between the parent and forked processes. We do this through the `EventEmitter` module interface. Here's an example:
-
-The parent file, `parent.js`:
+Các hàm `spawn`, `exec` và `execFile` từ mô đun `child_process` cũng có các phiên bản chặn đồng bộ (synchronous blocking) mà sẽ đợi cho đến khi the child process exits.
 
 ```js
-      const { fork } = require('child_process');
-      
-      const forked = fork('child.js');
-      
-      forked.on('message', (msg) => {
-        console.log('Message from child', msg);
-      });
-      
-      forked.send({ hello: 'world' });
-      
-      The child file, `child.js`:
-      
-      process.on('message', (msg) => {
-        console.log('Message from parent:', msg);
-      });
-      
-      let counter = 0;
-      
-      setInterval(() => {
-        process.send({ counter: counter++ });
-      }, 1000);
+const {
+  spawnSync,
+  execSync,
+  execFileSync,
+} = require('child_process');
 ```
 
-In the parent file above, we fork `child.js` (which will execute the file with the `node` command) and then we listen for the `message` event. The `message` event will be emitted whenever the child uses `process.send`, which we're doing every second.
+Các phiên bản đồng bộ này có khả năng hữu ích khi cố gắng đơn giản hóa các tác vụ kịch bản (scripting tasks) hoặc bất kỳ startup processing tasks nào, nhưng chúng nên được tránh bằng cách khác.
 
-To pass down messages from the parent to the child, we can execute the `send` function on the forked object itself, and then, in the child script, we can listen to the `message` event on the global `process` object.
+#### The fork() function
 
-When executing the `parent.js` file above, it'll first send down the `{ hello: 'world' }` object to be printed by the forked child process and then the forked child process will send an incremented counter value every second to be printed by the parent process.
+The `fork` function là một biến thể của hàm `spawn` để spawning các node processes. Sự khác biệt lớn nhất giữa `spawn` và `fork` là đó là một communication channel được thiết lập cho the child process khi sử dụng `fork`, vì vậy chúng ta có thể sử dụng hàm `send` trên the forked process cùng với chính the global `process` object để trao đổi messages giữa the parent và forked processes. Chúng ta thực hiện điều này thông qua the `EventEmitter` module interface. Đây là một ví dụ:
+
+The parent file, `parent.js`:
+
+```js
+const { fork } = require('child_process');
+
+const forked = fork('child.js');
+
+forked.on('message', (msg) => {
+  console.log('Message from child', msg);
+});
+
+forked.send({ hello: 'world' });
+```
+
+The child file, `child.js`:
+
+```js
+process.on('message', (msg) => {
+  console.log('Message from parent:', msg);
+});
+
+let counter = 0;
+
+setInterval(() => {
+  process.send({ counter: counter++ });
+}, 1000);
+```
+
+Trong parent file ở trên, chúng ta fork `child.js` (sẽ thực thi the file bằng `node` command) và sau đó chúng ta listen the `message` event. The `message` event sẽ được phát ra (emitted) bất cứ khi nào the child sử dụng `process.send`, chúng ta đang làm mỗi giây.
+
+Để pass down messages từ the parent tới the child, chúng ta có thể thực thi hàm `send` trên chính the forked object, và sau đó, trong the child script, chúng ta có thể listen to the `message` event trên the global `process` object.
+
+Khi thực thi the `parent.js` file ở trên, trước tiên nó sẽ gửi xuống the `{ hello: 'world' }` object sẽ được in (printed) bởi the forked child process và sau đó the forked child process sẽ gửi một incremented counter value mỗi giây được in (printed) bởi the parent process.
 
 ![](https://cdn-images-1.medium.com/max/1000/1*GOIOTAZTcn40qZ3JwgsrNA.gif)
 
-*Screenshot captured from my Pluralsight course --- Advanced Node.js*
+*Ảnh chụp màn hình được chụp từ khóa học Pluralsight của tôi -- Node.js nâng cao*
 
-Let's do a more practical example about the `fork` function.
+Chúng ta hãy làm một ví dụ thực tế hơn về hàm `fork`.
 
-Let's say we have an http server that handles two endpoints. One of these endpoints (`/compute` below) is computationally expensive and will take a few seconds to complete. We can use a long for loop to simulate that:
-
-```js
-      const http = require('http');
-      
-      const longComputation = () => {
-        let sum = 0;
-        for (let i = 0; i < 1e9; i++) {
-          sum += i;
-        };
-        return sum;
-      };
-
-      const server = http.createServer();
-      
-      server.on('request', (req, res) => {
-        if (req.url === '/compute') {
-          const sum = longComputation();
-          return res.end(`Sum is ${sum}`);
-        } else {
-          res.end('Ok')
-        }
-      });
-      
-      server.listen(3000);
-```
-
-This program has a big problem; when the the `/compute` endpoint is requested, the server will not be able to handle any other requests because the event loop is busy with the long for loop operation.
-
-There are a few ways with which we can solve this problem depending on the nature of the long operation but one solution that works for all operations is to just move the computational operation into another process using `fork`.
-
-We first move the whole `longComputation` function into its own file and make it invoke that function when instructed via a message from the main process:
-
-In a new `compute.js` file:
+Giả sử chúng ta có một http server xử lý hai endpoints. Một trong những endpoints này (`/compute` bên dưới) tính toán rất nhiều và sẽ mất vài giây để hoàn thành. Chúng ta có thể sử dụng một long for loop để mô phỏng rằng:
 
 ```js
-      const longComputation = () => {
-        let sum = 0;
-        for (let i = 0; i < 1e9; i++) {
-          sum += i;
-        };
-        return sum;
-      };
-      
-      process.on('message', (msg) => {
-        const sum = longComputation();
-        process.send(sum);
-      });
+const http = require('http');
+
+const longComputation = () => {
+  let sum = 0;
+  for (let i = 0; i < 1e9; i++) {
+    sum += i;
+  };
+  return sum;
+};
+
+const server = http.createServer();
+
+server.on('request', (req, res) => {
+  if (req.url === '/compute') {
+    const sum = longComputation();
+    return res.end(`Sum is ${sum}`);
+  } else {
+    res.end('Ok')
+  }
+});
+
+server.listen(3000);
 ```
 
-Now, instead of doing the long operation in the main process event loop, we can `fork` the `compute.js` file and use the messages interface to communicate messages between the server and the forked process.
+This program có một vấn đề lớn; khi the `/compute` endpoint được requested, the server sẽ không thể xử lý bất kỳ requests nào khác vì the event loop đang bận với hoạt động the long for loop.
+
+Có một số cách chúng ta có thể giải quyết vấn đề này tùy thuộc vào bản chất của độ dài hoạt động (the long operation) nhưng một giải pháp hiệu quả cho tất cả các hoạt động là chỉ cần chuyển hoạt động tính toán (the computational operation) sang process khác bằng cách sử dụng `fork`.
+
+Trước tiên chúng ta di chuyển toàn bộ hàm `longComputation` vào tệp riêng của nó và làm cho nó gọi ra hàm đó khi được hướng dẫn qua một message từ the main process:
+
+Trong tệp `compute.js` mới:
 
 ```js
-      const http = require('http');
-      const { fork } = require('child_process');
-      
-      const server = http.createServer();
-      
-      server.on('request', (req, res) => {
-        if (req.url === '/compute') {
-          const compute = fork('compute.js');
-          compute.send('start');
-          compute.on('message', sum => {
-            res.end(`Sum is ${sum}`);
-          });
-        } else {
-          res.end('Ok')
-        }
-      });
-      
-      server.listen(3000);
+const longComputation = () => {
+  let sum = 0;
+  for (let i = 0; i < 1e9; i++) {
+    sum += i;
+  };
+  return sum;
+};
+
+process.on('message', (msg) => {
+  const sum = longComputation();
+  process.send(sum);
+});
 ```
 
-When a request to `/compute` happens now with the above code, we simply send a message to the forked process to start executing the long operation. The main process's event loop will not be blocked.
+Bây giờ, thay vì thực hiện the long operation trong the main process event loop, chúng ta có thể `fork` tệp `compute.js` và sử dụng the messages interface để giao messages giữa the server và the forked process.
 
-Once the forked process is done with that long operation, it can send its result back to the parent process using `process.send`.
+```js
+const http = require('http');
+const { fork } = require('child_process');
 
-In the parent process, we listen to the `message` event on the forked child process itself. When we get that event, we'll have a `sum` value ready for us to send to the requesting user over http.
+const server = http.createServer();
 
-The code above is, of course, limited by the number of processes we can fork, but when we execute it and request the long computation endpoint over http, the main server is not blocked at all and can take further requests.
+server.on('request', (req, res) => {
+  if (req.url === '/compute') {
+    const compute = fork('compute.js');
+    compute.send('start');
+    compute.on('message', sum => {
+      res.end(`Sum is ${sum}`);
+    });
+  } else {
+    res.end('Ok')
+  }
+});
 
-Node's `cluster` module, which is the topic of my next article, is based on this idea of child process forking and load balancing the requests among the many forks that we can create on any system.
+server.listen(3000);
+```
 
-That's all I have for this topic. Thanks for reading! Until next time!
+Khi một request to `/compute` xảy ra với mã ở trên, chúng ta chỉ cần gửi một message đến the forked process để bắt đầu thực thi the long operation. The main process's event loop sẽ không bị chặn.
+
+Khi the forked process thực hiện xong với long operation đó, nó có thể gửi kết quả của nó trở lại the parent process bằng cách sử dụng `process.send`.
+
+Trong the parent process, chúng ta listen to the `message` event trên chính the forked child process. Khi chúng ta nhận được event đó, chúng ta sẽ có một giá trị `sum` sẵn sàng để chúng ta gửi cho người dùng yêu cầu (requesting user) qua http.
+
+Tất nhiên, đoạn mã trên bị giới hạn bởi số lượng processes chúng ta có thể fork, nhưng khi chúng ta thực thi nó và request the long computation endpoint qua http, the main server hoàn toàn không bị chặn và có thể take further requests.
+
+Node's `cluster` module, là chủ đề của bài viết tiếp theo của tôi, dựa trên ý tưởng này của child process forking và load balancing các the requests thông qua many forks mà chúng ta có thể tạo trên bất kỳ hệ thống nào.
+
+Đó là tất cả những gì tôi có cho chủ đề này. Cảm ơn vì đã đọc! Cho đến lần sau!
 
 * * * * *
 
 Learning React or Node? Checkout my books:
 
--   [Learn React.js by Building Games](http://amzn.to/2peYJZj)
--   [Node.js Beyond the Basics](http://amzn.to/2FYfYru)
+- [Learn React.js by Building Games](http://amzn.to/2peYJZj)
+- [Node.js Beyond the Basics](http://amzn.to/2FYfYru)
