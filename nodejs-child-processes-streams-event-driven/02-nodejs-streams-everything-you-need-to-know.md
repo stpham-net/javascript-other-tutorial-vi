@@ -535,9 +535,9 @@ fs.createReadStream(file)
   .on('finish', () => console.log('Done'));
 ```
 
-Kịch bản trên nén và sau đó mã hóa tệp đã qua và chỉ những người có secret mới có thể sử dụng tệp xuất ra. Chúng tôi không thể giải nén tệp này với các tiện ích giải nén thông thường vì nó được mã hóa.
+Kịch bản trên nén và sau đó mã hóa tệp đã đi qua (passed file) và chỉ những người có secret mới có thể sử dụng tệp xuất ra. Chúng ta không thể giải nén tệp này với các tiện ích giải nén thông thường vì nó được mã hóa.
 
-Để thực sự có thể giải nén bất cứ thứ gì được nén bằng tập lệnh ở trên, chúng ta cần sử dụng các streams ngược lại cho crypto và zlib theo thứ tự ngược lại, rất đơn giản:
+Để thực sự có thể giải nén bất cứ thứ gì được nén bằng script ở trên, chúng ta cần sử dụng các streams ngược lại cho crypto và zlib theo thứ tự ngược lại, rất đơn giản:
 
 ```js
 fs.createReadStream(file)
@@ -548,7 +548,7 @@ fs.createReadStream(file)
   .on('finish', () => console.log('Done'));
 ```
 
-Giả sử tệp đã truyền là phiên bản nén, đoạn mã trên sẽ tạo ra một luồng đọc (read stream) từ đó, dẫn nó vào crypto `createDecipher()` stream (sử dụng cùng một secret), chuyển đầu ra của nó vào zlib `createGunzip()` stream, và sau đó ghi lại mọi thứ vào một tệp mà không có phần mở rộng.
+Giả sử tệp đã truyền (passed file) là phiên bản nén, đoạn mã trên sẽ tạo ra một luồng đọc (read stream) từ đó, pipe nó vào crypto `createDecipher()` stream (sử dụng cùng một secret), pipe đầu ra của nó vào zlib `createGunzip()` stream, và sau đó ghi lại mọi thứ vào một tệp mà không có phần đuôi (.zz).
 
 Đó là tất cả những gì tôi có cho chủ đề này. Cảm ơn vì đã đọc! Cho đến lần sau!
 
