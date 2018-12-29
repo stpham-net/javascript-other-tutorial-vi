@@ -127,12 +127,12 @@ Sẵn sàng để học stream bây giờ?
 
 Có bốn kiểu stream cơ bản trong Node.js: Readable, Writable, Duplex, and Transform streams.
 
-- Một readable stream là một sự trừu tượng cho một nguồn mà data có thể được tiêu thụ. Một ví dụ về điều đó là phương thức `fs.createReadStream`.
-- Một writable stream là một sự trừu tượng (abstraction) cho đích mà dữ liệu có thể được ghi. Một ví dụ về điều đó là phương thức `fs.createWriteStream`.
-- Một duplex streams là có thể cả đọc và ghi được. Một ví dụ về điều đó là một TCP socket.
+- Một readable stream là một sự trừu tượng (abstraction) cho một nguồn (source) mà data có thể được tiêu thụ (consumed). Một ví dụ về điều đó là phương thức `fs.createReadStream`.
+- Một writable stream là một sự trừu tượng (abstraction) cho một đích (destination) mà data có thể được ghi (written). Một ví dụ về điều đó là phương thức `fs.createWriteStream`.
+- Một duplex streams là có thể cả Readable và Writable. Một ví dụ về điều đó là một TCP socket.
 - Một transform stream về cơ bản là một duplex stream có thể được sử dụng để sửa đổi hoặc biến đổi dữ liệu khi được ghi và đọc. Một ví dụ về điều đó là `zlib.createGzip` stream để nén dữ liệu bằng gzip. Bạn có thể nghĩ về một transform stream là một hàm trong đó đầu vào là phần writable stream và đầu ra là phần readable stream. Bạn cũng có thể nghe thấy các transform streams được gọi là "*qua các luồng (through streams)*."
 
-Tất cả các streams là các thực thể (instances) của `EventEmitter`. Chúng phát ra các sự kiện (emit events) có thể được sử dụng để đọc và ghi dữ liệu. Tuy nhiên, chúng ta có thể sử dụng streams data theo cách đơn giản hơn bằng cách sử dụng phương thức `pipe`.
+Tất cả các streams là các thực thể (instances) của `EventEmitter`. Chúng phát ra các sự kiện (emit events) có thể được sử dụng để đọc và ghi dữ liệu. Tuy nhiên, chúng ta có thể tiêu thụ streams data theo cách đơn giản hơn bằng cách sử dụng phương thức `pipe`.
 
 #### The pipe method
 
@@ -142,7 +142,7 @@ Tất cả các streams là các thực thể (instances) của `EventEmitter`. 
 readableSrc.pipe(writableDest)
 ```
 
-Trong dòng đơn giản này, chúng ta đang dẫn đầu ra (piping) của một readable stream -- nguồn dữ liệu, là đầu vào của writable stream -- đích. Nguồn phải là một readable stream và đích phải là một writable stream. Tất nhiên, cả hai đều có thể là duplex/transform streams. Trên thực tế, nếu chúng ta piping tới một duplex stream, chúng ta có thể chain pipe calls giống như chúng ta làm trong Linux:
+Trong dòng đơn giản này, chúng ta đang piping the output của một readable stream (nguồn dữ liệu), là đầu vào của writable stream (đích dữ liệu). Nguồn phải là một readable stream và đích phải là một writable stream. Tất nhiên, cả hai đều có thể là duplex/transform streams. Trên thực tế, nếu chúng ta piping tới một duplex stream, chúng ta có thể chain pipe calls giống như chúng ta làm trong Linux:
 
 ```js
 readableSrc
@@ -151,7 +151,7 @@ readableSrc
   .pipe(finalWrtitableDest)
 ```
 
-Phương thức `pipe` trả về stream đích, cho phép chúng ta thực hiện chaining ở trên. Đối với các streams `a` (readable), `b` và `c` (duplex), và `d` (writable), chúng ta có thể:
+Phương thức `pipe` trả về destination stream, cho phép chúng ta thực hiện chaining ở trên nó. Đối với các streams `a` (readable), `b` và `c` (duplex), và `d` (writable), chúng ta có thể:
 
 ```js
 a.pipe(b).pipe(c).pipe(d)
@@ -171,7 +171,7 @@ Phương thức `pipe` là cách dễ nhất để tiêu thụ streams. Nói chu
 
 Bên cạnh việc đọc từ nguồn readable stream và ghi tới một writable stream đích, phương thức `pipe` sẽ tự động quản lý một số thứ trên đường đi. Ví dụ: nó xử lý các lỗi, end-of-files, và các trường hợp khi một stream chậm hơn hoặc nhanh hơn các stream khác.
 
-Tuy nhiên, streams cũng có thể được tiêu thụ với các events trực tiếp. Đây là mã tương đương với sự kiện được đơn giản hóa về cách phương thức `pipe` chủ yếu làm để đọc và ghi dữ liệu:
+Tuy nhiên, streams cũng có thể được tiêu thụ với các events trực tiếp. Đây là mã đơn giản viết theo kiểu event của phương thức `pipe` chủ yếu là đọc và ghi dữ liệu:
 
 ```js
 # readable.pipe(writable)
