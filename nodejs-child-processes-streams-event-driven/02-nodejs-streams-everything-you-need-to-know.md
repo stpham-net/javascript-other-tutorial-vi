@@ -185,7 +185,7 @@ readable.on('end', () => {
 });
 ```
 
-Dưới đây là danh sách các sự kiện và functions quan trọng có thể được sử dụng với các readable and writable streams:
+Dưới đây là danh sách các events và functions quan trọng có thể được sử dụng với các readable and writable streams:
 
 ![](images/6.png)
 
@@ -193,17 +193,17 @@ Dưới đây là danh sách các sự kiện và functions quan trọng có th�
 
 Các events và functions có liên quan nào đó bởi vì chúng thường được sử dụng cùng nhau.
 
-Các sự kiện quan trọng nhất trên một readable stream là:
+Các events quan trọng nhất trên một readable stream là:
 
-- The `data` event, được emitted bất cứ khi nào stream truyền một a chunk đến consumer.
+- The `data` event, được emitted bất cứ khi nào stream truyền một chunk đến consumer.
 - The `end` event, được emitted khi không còn dữ liệu nào được tiêu thụ (consumed) từ stream.
 
-Các sự kiện quan trọng nhất trên một writable stream là:
+Các events quan trọng nhất trên một writable stream là:
 
 - The `drain` event, là tín hiệu cho thấy writable stream có thể nhận được nhiều dữ liệu hơn.
 - The `finish` event, được emitted khi tất cả dữ liệu đã được flushed tới underlying system.
 
-Các events and functions có thể được kết hợp để tạo ra việc tùy chỉnh và tối ưu hóa sử dụng của streams. Để sử dụng (consume) một readable stream, chúng ta có thể sử dụng các phương thức `pipe`/`unpipe` hoặc các phương thức `read`/`unshift`/`resume`. Để sử dụng (consume) một writable stream, chúng ta có thể biến nó thành đích của `pipe`/`unpipe`, hoặc chỉ cần viết tới nó bằng phương thức `write` và gọi phương thức `end` khi chúng ta hoàn thành.
+Các events and functions có thể được kết hợp để tạo ra việc tùy chỉnh và tối ưu hóa sử dụng của streams. Để tiêu thụ (consume) một readable stream, chúng ta có thể sử dụng các phương thức `pipe`/`unpipe` hoặc các phương thức `read`/`unshift`/`resume`. Để tiêu thụ (consume) một writable stream, chúng ta có thể biến nó thành đích của `pipe`/`unpipe`, hoặc chỉ cần write to it bằng phương thức `write` và gọi phương thức `end` khi chúng ta hoàn thành.
 
 #### Paused and Flowing Modes of Readable Streams
 
