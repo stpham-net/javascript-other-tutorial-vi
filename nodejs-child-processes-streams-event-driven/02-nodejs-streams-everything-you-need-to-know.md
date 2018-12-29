@@ -355,7 +355,7 @@ Mã này tương đương với mã đơn giản hơn mà chúng ta đã bắt �
 
 #### Implementing Duplex/Transform Streams
 
-Với các duplex streams, chúng ta có thể thực thi cả các readable and writable streams với cùng một đối tượng. Như thể chúng ta kế thừa từ cả hai interfaces.
+Với các duplex streams, chúng ta có thể triển khai cả các readable and writable streams với cùng một đối tượng. Như thể chúng ta kế thừa từ cả hai interfaces.
 
 Dưới đây là một ví dụ duplex stream kết hợp hai writable and readable được triển khai ở trên:
 
@@ -381,7 +381,7 @@ inoutStream.currentCharCode = 65;
 process.stdin.pipe(inoutStream).pipe(process.stdout);
 ```
 
-Bằng cách kết hợp các phương thức, chúng ta có thể sử dụng duplex stream để đọc các chữ cái từ A đến Z và chúng ta cũng có thể sử dụng nó cho tính năng echo của nó. Chúng ta pipe readable `stdin` stream vào duplex stream này để sử dụng tính năng echo và chúng ta pipe chính duplex stream vào writable `stdout` stream để xem các chữ cái từ A đến Z.
+Bằng cách kết hợp các phương thức, chúng ta có thể sử dụng duplex stream để read các chữ cái từ A đến Z và chúng ta cũng có thể sử dụng nó cho tính năng echo của nó. Chúng ta pipe readable `stdin` stream vào duplex stream này để sử dụng tính năng echo và chúng ta pipe chính duplex stream vào writable `stdout` stream để xem các chữ cái từ A đến Z.
 
 Điều quan trọng là phải hiểu rằng các mặt readable và writable của duplex stream hoạt động hoàn toàn độc lập với nhau. Đây chỉ đơn thuần là nhóm hai tính năng thành một đối tượng.
 
