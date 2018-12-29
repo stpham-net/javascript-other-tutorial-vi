@@ -24,13 +24,13 @@ Xin lưu ý rằng bạn sẽ cần hiểu rõ về các Node.js *events* và *s
 
 ### The Child Processes Module
 
-Chúng ta có thể dễ dàng quay (spin) một child process bằng cách sử dụng mô đun `child_ process` của Node và các child processes đó có thể dễ dàng giao tiếp với nhau bằng một hệ thống nhắn tin (messaging system).
+Chúng ta có thể dễ dàng quay (spin) một child process bằng cách sử dụng mô đun `child_process` của Node và các child processes đó có thể dễ dàng giao tiếp với nhau bằng một hệ thống nhắn tin (messaging system).
 
-Mô-đun `child_ process` cho phép chúng ta truy cập các chức năng của Hệ điều hành (Operating System functionalities) bằng cách chạy bất kỳ lệnh hệ thống (system command) nào bên trong một child process, well.
+Mô-đun `child_process` cho phép chúng ta truy cập các chức năng của Hệ điều hành (Operating System functionalities) bằng cách chạy bất kỳ lệnh hệ thống (system command) nào bên trong một child process, well.
 
 Chúng ta có thể kiểm soát (control) luồng đầu vào (input stream) của child process đó và listen luồng đầu ra (output stream) của nó. Chúng ta cũng có thể kiểm soát các đối số được truyền bên dưới OS command và chúng ta có thể làm bất cứ điều gì chúng ta muốn với đầu ra của lệnh đó. Ví dụ, chúng ta có thể đặt đầu ra của một lệnh làm đầu vào cho một lệnh khác (giống như chúng ta làm trong Linux) vì tất cả các đầu vào và đầu ra của các lệnh này có thể được trình bày cho chúng ta bằng cách sử dụng [Node.js streams](https://medium.freecodecamp.com/node-js-streams-everything-you-need-to-know-c9141306be93).
 
-* Lưu ý rằng các ví dụ tôi sẽ sử dụng trong bài viết này đều dựa trên Linux. Trên Windows, bạn cần chuyển đổi các lệnh tôi sử dụng với các lựa chọn thay thế dành cho Windows.*
+*Lưu ý rằng các ví dụ tôi sẽ sử dụng trong bài viết này đều dựa trên Linux. Trên Windows, bạn cần chuyển đổi các lệnh tôi sử dụng với các lựa chọn thay thế dành cho Windows.*
 
 Có bốn cách khác nhau để tạo một child process trong Node: `spawn()`, `fork()`, `exec()`, and `execFile()`.
 
@@ -48,7 +48,7 @@ const child = spawn('pwd');
 
 Chúng ta chỉ cần destructure the `spawn` function ra khỏi `child_process` module và thực thi nó với OS command làm đối số đầu tiên.
 
-Kết quả của việc thực thi hàm `spawn` (đối tượng `child` ở trên) là một phiên bản `ChildProcess`, thực hiện [EventEmitter API](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d). Điều này có nghĩa là chúng ta có thể đăng ký handlers cho các events trên child object này trực tiếp. Ví dụ, chúng ta có thể làm gì đó khi child process thoát ra bằng cách đăng ký một handler cho `exit` event:
+Kết quả của việc thực thi hàm `spawn` (đối tượng `child` ở trên) là một phiên bản `ChildProcess`, thực hiện [EventEmitter API](https://medium.freecodecamp.com/understanding-node-js-event-driven-architecture-223292fcbc2d). Điều này có nghĩa là chúng ta có thể đăng ký handlers cho các events trên child object này trực tiếp. Ví dụ, chúng ta có thể làm gì đó khi child process exits bằng cách đăng ký một handler cho `exit` event:
 
 ```js
 child.on('exit', function (code, signal) {
@@ -57,7 +57,7 @@ child.on('exit', function (code, signal) {
 });
 ```
 
-The handler ở trên cung cấp cho chúng ta exit `code` cho the child process và `signal`, nếu có, được sử dụng để chấm dứt the child process. `signal` variable này là null khi the child process exits bình thường.
+The handler ở trên cung cấp cho chúng ta exit `code` cho the child process, và `signal` nếu có được sử dụng để chấm dứt the child process. `signal` variable này là null khi the child process exits bình thường.
 
 Các events khác mà chúng ta có thể đăng ký handlers với the `ChildProcess` instances là `disconnect`, `error`, `close`, và `message`.
 
