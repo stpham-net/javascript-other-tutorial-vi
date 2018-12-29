@@ -228,26 +228,26 @@ Trong chế độ flowing, dữ liệu thực sự có thể bị mất nếu kh
 
 Khi tiêu thụ các readable streams bằng phương thức `pipe`, chúng ta không phải lo lắng về các chế độ này vì `pipe` tự động quản lý chúng.
 
-### Thực thi luồng (Implementing Streams)
+### Triển khai Streams (Implementing Streams)
 
 Khi chúng ta nói về các streams trong Node.js, có hai nhiệm vụ khác nhau chính:
 
-- Nhiệm vụ của **thực thi (implementing)** các streams.
+- Nhiệm vụ của **triển khai (implementing)** các streams.
 - Nhiệm vụ của **tiêu thụ (consuming)** chúng.
 
-Cho đến nay chúng ta chỉ đã nói về việc tiêu thụ các luồng (consuming streams). Hãy thực thi một chút! (Let's implement some!)
+Cho đến nay chúng ta chỉ đã nói về việc tiêu thụ các luồng (consuming streams). Hãy triển khai một chút! (Let's implement some!)
 
 Stream implementers thường là những người `require` mô đun `stream`.
 
 #### Implementing a Writable Stream
 
-Để thực thi một writable stream, chúng ta cần sử dụng `Writable` constructor từ stream module.
+Để triển khai một writable stream, chúng ta cần sử dụng `Writable` constructor từ stream module.
 
 ```js
 const { Writable } = require('stream');
 ```
 
-Chúng ta có thể thực thi một writable stream theo nhiều cách. Ví dụ, chúng ta có thể extend the `Writable` constructor nếu muốn.
+Chúng ta có thể triển khai một writable stream theo nhiều cách. Ví dụ, chúng ta có thể extend the `Writable` constructor nếu muốn.
 
 ```js
 class myWritableStream extends Writable {
@@ -281,7 +281,7 @@ Trong `outStream`, chúng ta chỉ đơn giản là `console.log` chunk dưới 
 
 Khi chúng ta chạy mã ở trên, bất cứ điều gì chúng ta nhập vào `process.stdin` sẽ được echoed back bằng cách sử dụng dòng `outStream` `console.log`.
 
-Đây không phải là một very useful stream để thực thi bởi vì nó thực sự đã được triển khai và tích hợp sẵn. Điều này rất giống với `process.stdout`. Chúng ta chỉ cần chuyển `stdin` tới `stdout` và chúng ta sẽ có được tính năng echo giống hệt với dòng đơn này:
+Đây không phải là một very useful stream để triển khai bởi vì nó thực sự đã được triển khai và tích hợp sẵn. Điều này rất giống với `process.stdout`. Chúng ta chỉ cần chuyển `stdin` tới `stdout` và chúng ta sẽ có được tính năng echo giống hệt với dòng đơn này:
 
 ```js
 process.stdin.pipe(process.stdout);
@@ -289,7 +289,7 @@ process.stdin.pipe(process.stdout);
 
 #### Implement a Readable Stream
 
-Để thực thi một readable stream, chúng ta yêu cầu `Readable` interface, và xây dựng (construct) một đối tượng từ nó và thực thi một phương thức `read()` trong tham số cấu hình của stream:
+Để triển khai một readable stream, chúng ta require the `Readable` interface, và xây dựng (construct) một đối tượng từ nó và triển khai một phương thức `read()` trong tham số cấu hình của stream:
 
 ```js
 const { Readable } = require('stream');
@@ -299,7 +299,7 @@ const inStream = new Readable({
 });
 ```
 
-Có một cách đơn giản để thực thi các readable streams. Chúng ta chỉ cần trực tiếp `push` dữ liệu mà chúng ta muốn consumers  tiêu thụ.
+Có một cách đơn giản để triển khai các readable streams. Chúng ta chỉ cần trực tiếp `push` dữ liệu mà chúng ta muốn consumers  tiêu thụ.
 
 ```js
 const { Readable } = require('stream');
@@ -318,7 +318,7 @@ inStream.pipe(process.stdout);
 
 Khi chúng ta `push` một `null` object, điều đó có nghĩa là chúng ta muốn báo hiệu rằng stream không có thêm dữ liệu.
 
-Để consume (tiêu thụ) readable stream giản này, chúng ta có thể đơn giản pipe nó vào writable stream `process.stdout`.
+Để consume (tiêu thụ) readable stream đơn giản này, chúng ta có thể đơn giản pipe nó vào writable stream `process.stdout`.
 
 Khi chúng ta chạy mã ở trên, chúng ta sẽ đọc tất cả dữ liệu từ `inStream` và echoing mã đó tới standard out. Rất đơn giản, nhưng cũng không hiệu quả lắm.
 
@@ -332,7 +332,7 @@ const inStream = new Readable({
 });
 ```
 
-Khi phương thức read được gọi trên một readable stream, việc thực thi có thể push một phần dữ liệu vào hàng đợi. Ví dụ: chúng ta có thể push từng chữ cái một, bắt đầu bằng mã ký tự 65 (đại diện cho A) và tăng ký tự đó trên mỗi lần đẩy:
+Khi phương thức read được gọi trên một readable stream, việc thực thi có thể push một phần dữ liệu vào hàng đợi (queue). Ví dụ: chúng ta có thể push từng chữ cái một, bắt đầu bằng mã ký tự 65 (đại diện cho A) và tăng ký tự đó trên mỗi lần đẩy:
 
 ```js
 const inStream = new Readable({
